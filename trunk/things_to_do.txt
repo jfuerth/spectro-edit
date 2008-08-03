@@ -1,0 +1,41 @@
+-Component for drawing an alpha curve (multiplier isn't good enough)
+-selective image update (to make paintbrush more responsive)
+-rectangular region tool that lets you draw a rectangle then do stuff to it:
+ -zero out data over a threshold
+ -scale data up or down
+ -zero data under a threshold
+ -flip data upside down
+-Paint to an alpha channel instead of directly modifying frames
+-Take the alpha channel into account during playback
+-Paintbrush shape selector
+-Copy and paste regions
+-Undo/redo for modifications
+-Pause should be immediate (don't drain the output line; flush it) 
+
+Completed:
+-Paintbrush tool for modifying spectral data
+-pref for fft-data to image-data multiplier
+-Reverse transform (playback)
+
+
+
+Window articles to look up:
+
+    F. J. Harris, "On the Use of Windows for Harmonic Analysis with the Discrete Fourier Transform", IEEE Proceedings, January 1978, pp. 51-83.
+
+        Perhaps the classic overview paper for discrete-time windows. It discusses some 15 different classes of windows including their spectral responses and the reasons for their development. [Brian Evans, bevans@ece.utexas.edu]
+
+        There are several typos in the above paper. The errors are corrected in:
+
+    A. H. Nuttall, "Some Windows with Very Good Sidelobe Behavior," IEEE Trans. on Acoustics, Speech, and Signal Processing, Vol. ASSP-29, No. 1, February 1981.
+
+    Nezih C. Geckinli and Davras Yavuz, "Some Novel Windows and a Concise Tutorial Comparison of Window Families", IEEE Transactions on Acoustics, Speech, and Signal Processing, Vol. ASSP-26, No. 6, December 1978.
+
+    Lineu C. Barbosa, "A Maximum-Energy-Concentration Spectral Window," IBM J. Res. Develop., Vol. 30, No. 3, May 1986, p. 321-325.
+
+        An elegant method for designing a time-discrete solution for realization of a spectral window which is ideal from an energy concentration viewpoint. This window is one that concentrates the maximum amount of energy in a specified bandwidth and hence provides optimal spectral resolution. Unlike the Kaiser window, this window is a discrete-time realization having the same objectives as the continuous-time prolate spheroidal function; at the expense of not having a closed form solution. [Joe Campbell, jpcampb@afterlife.ncsc.mil] 
+
+    D. J. Thomson, "Spectrum Estimation and Harmonic Analysis," Proc. of the IEEE, vol. 70, no. 9, pp. 1055-1096, Sep. 1982.
+
+        In his classic 1982 paper, David Thompson proposes the powerful multiple-window method, which is an elegant and robust technique for spectrum estimation. Based on the Cramer representation, Thompson's method is nonparametric, consistent, efficient, and optimally suited for finite data samples. In addition, it has excellent bias control and stability, provides an analysis of variance test for line components, and finally, works very well in many practical applications. Unfortunately, his important work has been neglected in many textbooks and graduate courses on statistical signal processing. [Dong Wei, wei@vision.ece.utexas.edu, and Brian Evans, bevans@ece.utexas.edu]
+

@@ -1,0 +1,145 @@
+/*
+ * Created on Jul 22, 2008
+ *
+ * This code belongs to SQL Power Group Inc.
+ */
+package net.bluecow.spectro;
+
+import java.io.IOException;
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
+
+public class PlayerThread extends Thread {
+    
+    /**
+     * Whether this thread should currently be playing audio. When true,
+     * playback proceeds; when false, playback is paused. Use the
+     * {@link #startPlaying(boolean)} and {@link #stopPlaying()} methods to
+     * manipulate this variable, because they properly handle
+     * synchronization between threads.
+     */
+    private boolean playing = false;
+    
+    /**
+     * When true, this thread will terminate at its earliest opportunity.
+     * Once terminated, it cannot be restarted. Use the {@link #terminate()}
+     * method to set this flag, because it properly handles synchronization
+     * between threads.
+     */
+    private boolean terminated = false;
+
+    private SourceDataLine outputLine;
+
+    private final Clip clip;
+
+    private AudioInputStream in;
+    
+    public PlayerThread(Clip clip) throws LineUnavailableException {
+        this.clip = clip;
+    }
+    
+    @Override
+    public void run() {
+        if (in == null) {
+            setPlaybackPosition(0);
+        }
+        try {
+            AudioFormat outputFormat = in.getFormat();
+            outputLine = AudioSystem.getSourceDataLine(outputFormat);
+            System.out.println("Output line buffer: "+outputLine.getBufferSize());
+            outputLine.open();
+            outputLine.start();
+
+            byte[] buf = new byte[outputLine.getBufferSize()];
+
+            while (!terminated) {
+                while (playing) {
+                    int readSize = outputLine.available();
+                    int len = in.read(buf, 0, readSize);
+                    if (len != readSize) {
+                        System.out.printf("Didn't read full %d bytes (got %d)\n", readSize, len);
+                    }
+                    if (len == -1) {
+                        setPlaybackPosition(0);
+                        // TODO need to notify client code that playback has completed
+                        playing = false;
+                    } else {
+                        outputLine.write(buf, 0, len);
+                    }
+                }
+
+                outputLine.drain();
+
+                for (;;) {
+                    synchronized (this) {
+                        if (playing || terminated) break;
+                        // if not playing and not terminated, sleep again!
+                    }
+                    try {
+                        debugf("Player thread sleeping for 10 seconds. playing=%b\n", playing);
+                        sleep(10000);
+                    } catch (InterruptedException ex) {
+                        debugf("Player thread interrupted in sleep\n");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (outputLine != null) {
+                outputLine.close();
+                outputLine = null;
+            }
+        }
+        
+        debugf("Player thread terminated\n");
+    }
+    
+    public synchronized void stopPlaying() {
+        playing = false;
+        // no need to interrupt in this case
+    }
+    
+    public synchronized void startPlaying() {
+        playing = true;
+        interrupt();
+    }
+    
+    /**
+     * Halts playback and permanently stops this thread.
+     */
+    public synchronized void terminate() {
+        stopPlaying();
+        terminated = true;
+        interrupt();
+    }
+    
+    private static void debugf(String fmt, Object ... args) {
+        System.out.printf(fmt, args);
+    }
+
+    /**
+     * Sets the current playback position of this thread. Position 0 is
+     * the beginning of the clip.
+     *  
+     * @param sample The sample number to jump to.  The time offset this represents
+     * depends on the audio format (specifically, the sampling rate) of the clip.
+     */
+    public synchronized void setPlaybackPosition(int sample) {
+        if (sample != 0) {
+            throw new UnsupportedOperationException("Currently, only rewind to beginning is supported.");
+        }
+        if (in != null) {
+            try {
+                in.close();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        in = clip.getAudio();
+    }
+}
