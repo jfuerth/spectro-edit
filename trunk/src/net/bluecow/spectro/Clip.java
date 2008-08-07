@@ -35,14 +35,14 @@ import javax.sound.sampled.UnsupportedAudioFileException;
  */
 public class Clip {
 
+    private static final Logger logger = Logger.getLogger(Clip.class.getName());
+
     /**
      * The audio format this class works with. Input audio will be converted to this
      * format automatically, and output data will always be created in this format.
      */
     private static final AudioFormat AUDIO_FORMAT = new AudioFormat(44100, 16, 1, true, true);
 
-    private static final Logger logger = Logger.getLogger(Clip.class.getName());
-    
     private final List<Frame> frames = new ArrayList<Frame>();
     
     /**
@@ -90,9 +90,6 @@ public class Clip {
                 int hi = buf[2*i];// & 0xff; // need sign extension
                 int low = buf[2*i + 1] & 0xff;
                 int sampVal = ( (hi << 8) | low);
-                if (frames.size() == 0) {
-                    System.out.printf("In sample: %4d %6d\n", i, sampVal);
-                }
                 samples[i] = (sampVal / spectralScale);
             }
             
@@ -102,7 +99,7 @@ public class Clip {
             in.mark(buf.length * 2);
         }
         
-        System.out.printf("Read %d frames from %s (%d bytes)\n", frames.size(), file.getAbsolutePath(), frames.size() * buf.length);
+        logger.info(String.format("Read %d frames from %s (%d bytes)\n", frames.size(), file.getAbsolutePath(), frames.size() * buf.length));
     }
     
     /**

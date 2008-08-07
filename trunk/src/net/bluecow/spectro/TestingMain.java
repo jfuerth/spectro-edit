@@ -17,7 +17,8 @@ import javax.swing.SwingUtilities;
 public class TestingMain {
 
     public static void main(String[] args) throws Exception {
-        final JFrame f = new JFrame();
+//        Logger.getLogger("").setLevel(Level.FINER);
+        final JFrame f = new JFrame("Spectro-Edit " + Version.VERSION);
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 try {

@@ -37,6 +37,7 @@ public class ClipPanel extends JPanel {
         setPreferredSize(new Dimension(clip.getFrameCount(), clip.getFrameFreqSamples()));
         img = new BufferedImage(clip.getFrameCount(), clip.getFrameFreqSamples(), BufferedImage.TYPE_INT_RGB);
         updateImage(null);
+        setBackground(Color.BLACK);
     }
 
     /**
@@ -149,6 +150,10 @@ public class ClipPanel extends JPanel {
         g2.scale(1.0, -1.0);
         
         Rectangle clipBounds = g2.getClipBounds();
+        logger.finer(String.format("Clip bounds: (%d, %d) %dx%d", clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height));
+        if (clipBounds.x + clipBounds.width > img.getWidth()) {
+            clipBounds.width = img.getWidth() - clipBounds.x;
+        }
         if (clipBounds != null) {
             g2.drawImage(img,
                     clipBounds.x, clipBounds.y, clipBounds.x + clipBounds.width, clipBounds.y + clipBounds.height,

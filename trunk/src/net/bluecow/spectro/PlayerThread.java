@@ -6,6 +6,7 @@
 package net.bluecow.spectro;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -15,6 +16,8 @@ import javax.sound.sampled.SourceDataLine;
 
 public class PlayerThread extends Thread {
     
+    private static final Logger logger = Logger.getLogger(PlayerThread.class.getName());
+
     /**
      * Whether this thread should currently be playing audio. When true,
      * playback proceeds; when false, playback is paused. Use the
@@ -50,7 +53,7 @@ public class PlayerThread extends Thread {
         try {
             AudioFormat outputFormat = in.getFormat();
             outputLine = AudioSystem.getSourceDataLine(outputFormat);
-            System.out.println("Output line buffer: "+outputLine.getBufferSize());
+            logger.finer("Output line buffer: "+outputLine.getBufferSize());
             outputLine.open();
             outputLine.start();
 
@@ -61,7 +64,7 @@ public class PlayerThread extends Thread {
                     int readSize = outputLine.available();
                     int len = in.read(buf, 0, readSize);
                     if (len != readSize) {
-                        System.out.printf("Didn't read full %d bytes (got %d)\n", readSize, len);
+                        logger.fine(String.format("Didn't read full %d bytes (got %d)\n", readSize, len));
                     }
                     if (len == -1) {
                         setPlaybackPosition(0);
@@ -80,10 +83,12 @@ public class PlayerThread extends Thread {
                         // if not playing and not terminated, sleep again!
                     }
                     try {
-                        debugf("Player thread sleeping for 10 seconds. playing=%b\n", playing);
+                        Object[] args = { playing };
+                        logger.fine(String.format("Player thread sleeping for 10 seconds. playing=%b\n", args));
                         sleep(10000);
                     } catch (InterruptedException ex) {
-                        debugf("Player thread interrupted in sleep\n");
+                        Object[] args = {};
+                        logger.fine(String.format("Player thread interrupted in sleep\n", args));
                     }
                 }
             }
@@ -95,8 +100,9 @@ public class PlayerThread extends Thread {
                 outputLine = null;
             }
         }
+        Object[] args = {};
         
-        debugf("Player thread terminated\n");
+        logger.fine(String.format("Player thread terminated\n", args));
     }
     
     public synchronized void stopPlaying() {
@@ -118,10 +124,6 @@ public class PlayerThread extends Thread {
         interrupt();
     }
     
-    private static void debugf(String fmt, Object ... args) {
-        System.out.printf(fmt, args);
-    }
-
     /**
      * Sets the current playback position of this thread. Position 0 is
      * the beginning of the clip.

@@ -1,23 +1,32 @@
--Component for drawing an alpha curve (multiplier isn't good enough)
--selective image update (to make paintbrush more responsive)
+Not yet done:
+
 -rectangular region tool that lets you draw a rectangle then do stuff to it:
  -zero out data over a threshold
  -scale data up or down
  -zero data under a threshold
  -flip data upside down
--Paint to an alpha channel instead of directly modifying frames
--Take the alpha channel into account during playback
--Paintbrush shape selector
+-Component for drawing an alpha curve (straight multiplier isn't good enough)
+-top-level exception catcher (including uncaught swing exceptions)
+-Paintbrush shape/size selector (maybe use greyscale PNGs to describe paintbrushes)
+-Paint to an alpha channel instead of directly modifying frames?
+ -if so, take the alpha channel into account during playback
 -Copy and paste regions
 -Undo/redo for modifications
 -Pause should be immediate (don't drain the output line; flush it) 
+-indicator of current playback position during playback and while paused 
+-import and export 16-bit greyscale images
 
-Completed:
+Completed in release 0.1:
+-forward transform (analysis)
+-Reverse transform
+ -in-program playback
+ -save modified audio back to WAV file
+-pref for fft-data to image-data multiplier (i.e. brightness)
 -Paintbrush tool for modifying spectral data
--pref for fft-data to image-data multiplier
--Reverse transform (playback)
-
-
+-selective image update (to make paintbrush more responsive)
+-build script that creates a single executable jar with release number in its name
+-don't stretch the image when it's smaller than the dialog (paint blank space instead)
+-show product version number in UI
 
 Window articles to look up:
 
