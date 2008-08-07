@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project name="spectro-edit">
+	
+	<!-- this sets the net.bluecow.spectro.VERSION property -->
+	<property file="src/net/bluecow/spectro/version.properties"/>
+	
+	<path id="compile.classpath">
+		<fileset dir="lib">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+
+	<!-- ================================= 
+          target: compile              
+         ================================= -->
+    <target name="compile" description="Compiles the source code to the build directory">
+        <mkdir dir="build"/>
+    	<javac srcdir="src"
+             destdir="build"
+             classpathref="compile.classpath"
+             debug="on" />
+    </target>
+	
+	<target name="jar" depends="compile" description="Creates an executable JAR of the application">
+		<mkdir dir="dist"/>
+		<unjar src="lib/jtransforms-1.6.jar" dest="build"/>
+		<jar destfile="dist/spectro-edit_${net.bluecow.spectro.VERSION}.jar"
+			 basedir="build"
+			 includes="**" manifest="etc/manifest"/>
+	</target>
+
+</project>

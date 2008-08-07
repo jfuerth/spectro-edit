@@ -6,9 +6,12 @@
 package net.bluecow.spectro;
 
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 public class VorbisWindowFunction implements WindowFunction {
 
+    private static final Logger logger = Logger.getLogger(VorbisWindowFunction.class.getName());
+    
     private final double[] scalars;
     
     private static final double PI = Math.PI;
@@ -24,7 +27,7 @@ public class VorbisWindowFunction implements WindowFunction {
             double xx = Math.sin( (PI/(2.0*size)) * (2.0 * i) );
             scalars[i] = Math.sin( (PI/2.0) * (xx * xx) );
         }
-        System.out.printf("VorbisWindowFunction scalars (size=%d): %s\n", scalars.length, Arrays.toString(scalars));
+        logger.finest(String.format("VorbisWindowFunction scalars (size=%d): %s\n", scalars.length, Arrays.toString(scalars)));
     }
     
     public void applyWindow(double[] data) {
