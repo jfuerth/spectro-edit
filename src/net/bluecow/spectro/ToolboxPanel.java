@@ -15,6 +15,7 @@ import java.io.File;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -86,14 +87,17 @@ public class ToolboxPanel {
         }
     }
 
-    public JSlider makeBrightnessSlider() {
+    public JComponent makeBrightnessSlider() {
         final JSlider brightness = new JSlider(0, 5000000, (int) (clipPanel.getSpectralToScreenMultiplier() * 100.0));
         brightness.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 clipPanel.setSpectralToScreenMultiplier( ((double) brightness.getValue()) / 100.0 );
             }
         });
-        return brightness;
+        Box box = Box.createVerticalBox();
+        box.add(new JLabel("Brightness"));
+        box.add(brightness);
+        return box;
     }
     
     private JButton makeSaveButton() {
