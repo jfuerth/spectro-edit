@@ -14,12 +14,15 @@
 	<!-- ================================= 
           target: compile              
          ================================= -->
-    <target name="compile" description="Compiles the source code to the build directory">
+    <target name="compile" description="Compiles the source code to the build directory and copies all non-java resources">
         <mkdir dir="build"/>
     	<javac srcdir="src"
              destdir="build"
              classpathref="compile.classpath"
              debug="on" />
+    	<copy todir="build">
+    		<fileset dir="src" includes="**" excludes="**/*.java" />
+    	</copy>
     </target>
 	
 	<target name="jar" depends="compile" description="Creates an executable JAR of the application">
