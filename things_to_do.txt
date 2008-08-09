@@ -16,7 +16,14 @@ Not yet done:
 -indicator of current playback position during playback and while paused 
 -import and export 16-bit greyscale images
 
-Completed in release 0.1:
+
+Release 0.2: August 9, 2008
+Fixes to save dialog:
+ -now it works (failed with ClassCastException in 0.1)
+ -appends ".wav" to filenames that don't already end with ".wav"
+
+
+Release 0.1: August 7, 2008
 -forward transform (analysis)
 -Reverse transform
  -in-program playback
