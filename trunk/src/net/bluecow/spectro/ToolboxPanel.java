@@ -6,8 +6,10 @@
 package net.bluecow.spectro;
 
 import java.awt.Component;
+import java.awt.Dialog;
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -18,7 +20,6 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
@@ -105,12 +106,24 @@ public class ToolboxPanel {
         saveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    JDialog owner = (JDialog) SwingUtilities.getWindowAncestor(panel);
-                    FileDialog fd = new FileDialog(owner, "Save sample as", FileDialog.SAVE);
+                    FileDialog fd;
+                    Window owner = SwingUtilities.getWindowAncestor(panel);
+                    if (owner instanceof java.awt.Frame) {
+                        fd = new FileDialog((java.awt.Frame) owner, "Save sample as", FileDialog.SAVE);
+                    } else {
+                        fd = new FileDialog((Dialog) owner, "Save sample as", FileDialog.SAVE);
+                    }
                     fd.setVisible(true);
-                    String path = fd.getFile();
-                    if (path == null) return;
-                    AudioSystem.write(clipPanel.getClip().getAudio(), AudioFileFormat.Type.WAVE, new File(path));
+                    String dir = fd.getDirectory();
+                    String file = fd.getFile();
+                    if (file == null) return;
+                    if (!file.toLowerCase().endsWith(".wav")) {
+                        file += ".wav";
+                    }
+                    AudioSystem.write(
+                            clipPanel.getClip().getAudio(),
+                            AudioFileFormat.Type.WAVE,
+                            new File(dir, file));
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
                 }
