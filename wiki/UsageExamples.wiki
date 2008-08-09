@@ -1,4 +1,4 @@
-#labels Phase-Deploy
+#labels Phase-Deploy,Featured
 Here are some before and after examples to give you an idea of what's
 easy to do. If you come up with new ideas, I'd be interested to hear
 from you!
