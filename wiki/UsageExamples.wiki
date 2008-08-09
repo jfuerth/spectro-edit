@@ -7,7 +7,7 @@ from you!
   Me whistling with a TV show on in the background
 
 || http://spectro-edit.googlecode.com/svn/trunk/doc/examples/whistling_before_annotated.jpg || http://spectro-edit.googlecode.com/svn/trunk/doc/examples/whistling_after.jpg ||
-|| Before || After ||
+|| Before ([http://spectro-edit.googlecode.com/svn/trunk/doc/examples/whistling_before.wav Listen]) || After ([http://spectro-edit.googlecode.com/svn/trunk/doc/examples/whistling_after.wav Listen]) ||
 
 I recorded this sample with my laptop's built-in microphone while I
 was working on the initial release of Spectro-Edit. I whistled a bit
