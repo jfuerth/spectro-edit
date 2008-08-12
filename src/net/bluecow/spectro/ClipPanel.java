@@ -11,8 +11,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JPanel;
@@ -30,7 +30,11 @@ public class ClipPanel extends JPanel {
     
     private double spectralToScreenMultiplier = 6000.0;
     
-    private Rectangle lastImageUpdateRegion;
+    /**
+     * A rectangular frame that's manipulated from outside this class.
+     * See {@link #updateRegion(Rectangle)} for details.
+     */
+    private Rectangle region;
     
     public ClipPanel(Clip clip) {
         this.clip = clip;
@@ -114,11 +118,6 @@ public class ClipPanel extends JPanel {
             region = new Rectangle(0, 0, clip.getFrameCount(), clip.getFrameFreqSamples());
         }
         
-        lastImageUpdateRegion = new Rectangle(region);
-        
-        // cheese-out that just repaints the whole frames in question
-//        region.y = 0;
-//        region.height = clip.getFrameFreqSamples();
         toClipCoords(region);
         
         final int endCol = region.x + region.width;
@@ -146,6 +145,9 @@ public class ClipPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
+        
+        // Flip upside down while rendering the spectrogram
+        AffineTransform backupTransform = g2.getTransform();
         g2.translate(0, img.getHeight());
         g2.scale(1.0, -1.0);
         
@@ -163,11 +165,13 @@ public class ClipPanel extends JPanel {
             g2.drawImage(img, 0, 0, null);
         }
         
-        if (logger.isLoggable(Level.FINE) && lastImageUpdateRegion != null) {
+        // Now flip back for the region
+        g2.setTransform(backupTransform);
+        if (region != null) {
             g2.setColor(Color.YELLOW);
             g2.drawRect(
-                    lastImageUpdateRegion.x, lastImageUpdateRegion.y,
-                    lastImageUpdateRegion.width, lastImageUpdateRegion.height);
+                    region.x, region.y,
+                    region.width, region.height);
         }
     }
 
@@ -183,5 +187,28 @@ public class ClipPanel extends JPanel {
     
     public Clip getClip() {
         return clip;
+    }
+
+    /**
+     * Updates the location and size of a rectangular shape that's painted over
+     * the spectral data. Tools can use this to track selections.
+     * <p>
+     * Future: It probably would make more sense to build the concept of region
+     * selection right into this class, and let the tools read out the selected
+     * region when they want it.
+     * 
+     * @param region
+     */
+    public void updateRegion(Rectangle newRegion) {
+        Rectangle oldRegion = region;
+        region = new Rectangle(newRegion);
+        if (oldRegion != null && newRegion == null) {
+            repaint(oldRegion.x, oldRegion.y, oldRegion.width + 1, oldRegion.height + 1);
+        } else if (oldRegion == null && newRegion != null) {
+            repaint(newRegion.x, newRegion.y, newRegion.width + 1, newRegion.height + 1);
+        } else if (oldRegion != null && newRegion != null) {
+            oldRegion.add(newRegion);
+            repaint(oldRegion.x, oldRegion.y, oldRegion.width + 1, oldRegion.height + 1);
+        }
     }
 }
