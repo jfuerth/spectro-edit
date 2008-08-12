@@ -5,6 +5,7 @@ Not yet done:
  -scale data up or down
  -zero data under a threshold
  -flip data upside down
+-Continuous readout at mouse position: frequency (y axis) and time (x axis). frequency could show hz as well as nearest musical note.
 -Component for drawing an alpha curve (straight multiplier isn't good enough)
 -top-level exception catcher (including uncaught swing exceptions)
 -Paintbrush shape/size selector (maybe use greyscale PNGs to describe paintbrushes)
@@ -15,6 +16,9 @@ Not yet done:
 -Pause should be immediate (don't drain the output line; flush it) 
 -indicator of current playback position during playback and while paused 
 -import and export 16-bit greyscale images
+
+Release 0.3:
+-Region tool
 
 
 Release 0.2: August 9, 2008
