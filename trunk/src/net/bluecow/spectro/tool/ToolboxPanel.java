@@ -1,10 +1,22 @@
 /*
  * Created on Jul 18, 2008
  *
- * This code belongs to SQL Power Group Inc.
+ * Spectro-Edit is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Spectro-Edit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
-package net.bluecow.spectro;
+package net.bluecow.spectro.tool;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.FileDialog;
@@ -19,6 +31,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -26,6 +39,9 @@ import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import net.bluecow.spectro.ClipPanel;
+import net.bluecow.spectro.PlayerThread;
 
 public class ToolboxPanel {
 
@@ -39,21 +55,33 @@ public class ToolboxPanel {
      */
     private final JPanel panel;
     
+    private final JPanel toolSettingsPanel;
+    
+    private final JComboBox toolChooser;
+    
     public ToolboxPanel(ClipPanel clipPanel) {
         this.clipPanel = clipPanel;
         panel = new JPanel();
         panel.add(makeBrightnessSlider());
         panel.add(makeShuttleControls());
         panel.add(makeSaveButton());
-        panel.add(makePaintControls());
+        
+        toolSettingsPanel = new JPanel(new BorderLayout());
+        panel.add(toolSettingsPanel);
+
+        toolChooser = new JComboBox();
+        toolChooser.addItem(new PaintbrushTool());
+        toolChooser.addItem(new RegionTool());
+        toolSettingsPanel.add(toolChooser, BorderLayout.NORTH);
+        
+        toolChooser.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // have to deactivate prior tool
+                e.
+            }
+        });
     }
     
-    private JComponent makePaintControls() {
-        final PaintbrushTool paintbrush = new PaintbrushTool(clipPanel);
-        JLabel paintLabel = new JLabel("Paintbrush size: " + paintbrush.getRadius());
-        return paintLabel;
-    }
-
     private Component makeShuttleControls() {
         try {
             final PlayerThread playerThread = new PlayerThread(clipPanel.getClip()); // FIXME
@@ -131,6 +159,7 @@ public class ToolboxPanel {
         });
         return saveButton;
     }
+    
     public JPanel getPanel() {
         return panel;
     }

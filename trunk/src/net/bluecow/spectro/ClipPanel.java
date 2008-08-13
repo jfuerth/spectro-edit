@@ -1,7 +1,18 @@
 /*
  * Created on Jul 14, 2008
  *
- * This code belongs to SQL Power Group Inc.
+ * Spectro-Edit is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Spectro-Edit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 package net.bluecow.spectro;
 
@@ -113,7 +124,7 @@ public class ClipPanel extends JPanel {
      *            The region to update, in screen co-ordinates. Null means to
      *            update the whole image.
      */
-    void updateImage(Rectangle region) {
+    public void updateImage(Rectangle region) {
         if (region == null) {
             region = new Rectangle(0, 0, clip.getFrameCount(), clip.getFrameFreqSamples());
         }
@@ -138,6 +149,9 @@ public class ClipPanel extends JPanel {
             
             // this may or may not be faster...
             // img.setRGB(0, col, 1, nrows, rgbArray, 0, 1);
+            
+            // it would definitely be faster to update the array directly
+            // (it can be retrieved from the image's WritableRaster)
         }
     }
 

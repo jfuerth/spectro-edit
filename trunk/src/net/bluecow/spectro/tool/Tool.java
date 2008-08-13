@@ -1,5 +1,5 @@
 /*
- * Created on Jul 25, 2008
+ * Created on Aug 12, 2008
  *
  * Spectro-Edit is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,18 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
-package net.bluecow.spectro;
+package net.bluecow.spectro.tool;
+
+import javax.swing.JComponent;
+
+import net.bluecow.spectro.ClipPanel;
 
 /**
- * The trivial window function: just leaves the data alone.
+ * Defines all the things every tool can do.
  */
-public class NullWindowFunction implements WindowFunction {
+public interface Tool {
 
     /**
-     * Doesn't do anything.
+     * Returns the component that manages all the settings for this tool.
      */
-    public void applyWindow(double[] data) {
-        // noop
-    }
-
+    JComponent getSettingsPanel();
+    
+    /**
+     * Makes this tool respond to user input activity on the given clip panel.
+     */
+    void activate(ClipPanel cp);
+    
+    /**
+     * Makes this tool stop responding to user activity on the clip panel it was
+     * previously activated on.
+     */
+    void deactivate();
 }
