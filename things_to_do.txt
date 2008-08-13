@@ -1,17 +1,19 @@
 Not yet done:
 
--rectangular region tool that lets you draw a rectangle then do stuff to it:
- -zero out data over a threshold
- -scale data up or down
- -zero data under a threshold
- -flip data upside down
+-better user interface for choosing a tool and changing its properties
+ -paint tool: brush shape/size
+ -region tool:
+  -zero out data over a threshold
+  -scale data up or down
+  -zero data under a threshold
+  -flip data upside down
+  -copy/paste with option of logarithmic or linear
 -Continuous readout at mouse position: frequency (y axis) and time (x axis). frequency could show hz as well as nearest musical note.
 -Component for drawing an alpha curve (straight multiplier isn't good enough)
 -top-level exception catcher (including uncaught swing exceptions)
 -Paintbrush shape/size selector (maybe use greyscale PNGs to describe paintbrushes)
 -Paint to an alpha channel instead of directly modifying frames?
  -if so, take the alpha channel into account during playback
--Copy and paste regions
 -Undo/redo for modifications
 -Pause should be immediate (don't drain the output line; flush it) 
 -indicator of current playback position during playback and while paused 
