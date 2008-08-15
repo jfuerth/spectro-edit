@@ -21,6 +21,7 @@ import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -59,27 +60,46 @@ public class ToolboxPanel {
     
     private final JComboBox toolChooser;
     
-    public ToolboxPanel(ClipPanel clipPanel) {
-        this.clipPanel = clipPanel;
-        panel = new JPanel();
-        panel.add(makeBrightnessSlider());
-        panel.add(makeShuttleControls());
-        panel.add(makeSaveButton());
+    /**
+     * The current tool.
+     */
+    private Tool currentTool;
+    
+    public ToolboxPanel(ClipPanel cp) {
+        this.clipPanel = cp;
+        
+        JPanel topPanel = new JPanel();
+        topPanel.add(makeBrightnessSlider());
+        topPanel.add(makeShuttleControls());
+        topPanel.add(makeSaveButton());
         
         toolSettingsPanel = new JPanel(new BorderLayout());
-        panel.add(toolSettingsPanel);
 
         toolChooser = new JComboBox();
         toolChooser.addItem(new PaintbrushTool());
         toolChooser.addItem(new RegionTool());
-        toolSettingsPanel.add(toolChooser, BorderLayout.NORTH);
-        
+//        toolChooser.setSelectedItem(null);
+        toolSettingsPanel.add(toolChooser, BorderLayout.WEST);
+
         toolChooser.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                // have to deactivate prior tool
-                e.
+                if (currentTool != null) {
+                    currentTool.deactivate();
+                    toolSettingsPanel.remove(currentTool.getSettingsPanel());
+                }
+                currentTool = (Tool) toolChooser.getSelectedItem();
+                currentTool.activate(clipPanel);
+                toolSettingsPanel.add(currentTool.getSettingsPanel(), BorderLayout.CENTER);
+                panel.revalidate();
             }
         });
+        
+        panel = new JPanel(new GridLayout(2, 1));
+        panel.add(topPanel);
+        panel.add(toolSettingsPanel);
+        
+        // activates the action listener to select the default tool (must be done last)
+        toolChooser.setSelectedIndex(0);
     }
     
     private Component makeShuttleControls() {

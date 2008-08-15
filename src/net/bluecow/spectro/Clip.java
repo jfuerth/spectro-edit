@@ -29,20 +29,12 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-// need:
-// overlapping frames
-// quick access to spectral info (for drawing on screen)
-// sequential access to time-domain samples (for playback or saving out)
-// frame contents are mutable and must be reflected immediately in time-domain transformations
-
 /**
- * The Clip represents an audio clip of some length. The clip is split up
+ * A Clip represents an audio clip of some length. The clip is split up
  * into a series of equal-size frames of spectral information.  The frames
- * can be accessed in random order.
- * 
- *
- * @author fuerth
- * @version $Id:$
+ * of spectral information can be accessed in random order, and the clip
+ * can also provide an AudioInputStream of the current spectral information
+ * for playback or saving to a traditional PCM (WAV or AIFF) audio file.
  */
 public class Clip {
 
@@ -74,16 +66,23 @@ public class Clip {
      * and the amount they're multiplied after being transformed back.
      */
     private double spectralScale = 10000.0;
-    
+
     /**
-     * Creates a new Clip based on the acoustical information in the given audio file.
+     * Creates a new Clip based on the acoustical information in the given audio
+     * file.
      * <p>
-     * TODO: this could be time-consuming, so spectral conversion should be
-     * done in a background thread.
+     * TODO: this could be time-consuming, so spectral conversion should be done
+     * in a background thread.
      * 
      * @param file
+     *            The audio file to read. Currently, single-channel WAV and AIFF
+     *            are supported.
      * @throws UnsupportedAudioFileException
+     *             If the given file can't be read because it's not of a
+     *             supported type.
      * @throws IOException
+     *             If the file can't be read for more basic reasons, such
+     *             as nonexistence.
      */
     public Clip(File file) throws UnsupportedAudioFileException, IOException {
         WindowFunction windowFunc = new VorbisWindowFunction(frameSize);
@@ -125,7 +124,6 @@ public class Clip {
      */
     public int getFrameFreqSamples() {
         return frameSize;
-//        return frameSize / 2;
     }
 
     /**

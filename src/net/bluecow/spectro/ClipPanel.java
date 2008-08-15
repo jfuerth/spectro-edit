@@ -127,6 +127,8 @@ public class ClipPanel extends JPanel {
     public void updateImage(Rectangle region) {
         if (region == null) {
             region = new Rectangle(0, 0, clip.getFrameCount(), clip.getFrameFreqSamples());
+        } else {
+            region = new Rectangle(region);
         }
         
         toClipCoords(region);
@@ -215,7 +217,7 @@ public class ClipPanel extends JPanel {
      */
     public void updateRegion(Rectangle newRegion) {
         Rectangle oldRegion = region;
-        region = new Rectangle(newRegion);
+        region = newRegion == null ? null : new Rectangle(newRegion);
         if (oldRegion != null && newRegion == null) {
             repaint(oldRegion.x, oldRegion.y, oldRegion.width + 1, oldRegion.height + 1);
         } else if (oldRegion == null && newRegion != null) {
