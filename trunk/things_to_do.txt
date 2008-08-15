@@ -1,5 +1,6 @@
 Not yet done:
 
+-Undo/redo for modifications
 -better user interface for choosing a tool and changing its properties
  -paint tool: brush shape/size
  -region tool:
@@ -8,13 +9,23 @@ Not yet done:
   -zero data under a threshold
   -flip data upside down
   -copy/paste with option of logarithmic or linear
+-API fix: it should be a secret that the clip data is painted upside down.
+ practical upshot: remove the ClipPanel.toClipCoords() method, and everything
+                   should still work the same.
+ easiest fix: just reverse the DCT results after computing, and re-reverse them
+              before performing the inverse xform.
+ best fix: figure out how to compute the DCT that way in the first place
+ compromise: hide the array in Frame, and have the access methods translate the
+             y value.
+-file menu with open and close; multiple projects open at same time
+-edit menu with image and audio copy and paste
+-ability to play just the selected (time) region; optional looping
 -Continuous readout at mouse position: frequency (y axis) and time (x axis). frequency could show hz as well as nearest musical note.
 -Component for drawing an alpha curve (straight multiplier isn't good enough)
 -top-level exception catcher (including uncaught swing exceptions)
 -Paintbrush shape/size selector (maybe use greyscale PNGs to describe paintbrushes)
 -Paint to an alpha channel instead of directly modifying frames?
  -if so, take the alpha channel into account during playback
--Undo/redo for modifications
 -Pause should be immediate (don't drain the output line; flush it) 
 -indicator of current playback position during playback and while paused 
 -import and export 16-bit greyscale images

@@ -55,13 +55,14 @@ public class PaintbrushTool implements Tool {
      */
     public PaintbrushTool() {
         settingsPanel = new JPanel(new FlowLayout());
-        settingsPanel.add(brushSlider = new JSlider(1, 20, 5));
+        settingsPanel.add(brushSlider = new JSlider(1, 20, 1));
         settingsPanel.add(brushSizeLabel = new JLabel());
         brushSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 brushSizeLabel.setText("Paintbrush size: " + brushSlider.getValue());
             }
         });
+        brushSlider.setValue(5);
     }
     
     public void activate(ClipPanel cp) {
@@ -124,5 +125,10 @@ public class PaintbrushTool implements Tool {
 
     public JComponent getSettingsPanel() {
         return settingsPanel;
+    }
+    
+    @Override
+    public String toString() {
+        return "Paintbrush";
     }
 }

@@ -19,6 +19,7 @@ package net.bluecow.spectro;
 import java.awt.BorderLayout;
 import java.awt.FileDialog;
 import java.io.File;
+import java.util.logging.LogManager;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -30,7 +31,7 @@ import net.bluecow.spectro.tool.ToolboxPanel;
 public class TestingMain {
 
     public static void main(String[] args) throws Exception {
-//        Logger.getLogger("").setLevel(Level.FINER);
+        LogManager.getLogManager().readConfiguration(TestingMain.class.getResourceAsStream("LogManager.properties"));
         final JFrame f = new JFrame("Spectro-Edit " + Version.VERSION);
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
