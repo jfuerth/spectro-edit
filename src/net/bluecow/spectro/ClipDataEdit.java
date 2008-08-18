@@ -16,6 +16,8 @@
  */
 package net.bluecow.spectro;
 
+import java.awt.Rectangle;
+
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
@@ -74,14 +76,14 @@ public class ClipDataEdit extends AbstractUndoableEdit {
     public void undo() throws CannotUndoException {
         super.undo();
         apply(oldData);
-        // TODO tell the clip we changed this region
+        clip.regionChanged(getRegion());
     }
 
     @Override
     public void redo() throws CannotRedoException {
         super.redo();
         apply(newData);
-        // TODO tell the clip we changed this region
+        clip.regionChanged(getRegion());
     }
     
     /**
@@ -110,6 +112,15 @@ public class ClipDataEdit extends AbstractUndoableEdit {
                 data[i][j] = f.getReal(j + firstFreqIndex);
             }
         }
+    }
+
+    /**
+     * Returns the data region for this edit.
+     * 
+     * @return A rectangle with (x, y, w, h) == (firstFrame, firstFreqIndex, nFrames, nFreqs).
+     */
+    public Rectangle getRegion() {
+        return new Rectangle(firstFrame, firstFreqIndex, oldData.length, oldData[0].length);
     }
 
 }

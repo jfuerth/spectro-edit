@@ -19,20 +19,57 @@ package net.bluecow.spectro;
 import java.awt.BorderLayout;
 import java.awt.FileDialog;
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.LogManager;
 
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
+import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
+import javax.swing.undo.UndoManager;
 
+import net.bluecow.spectro.action.UndoRedoAction;
 import net.bluecow.spectro.tool.ToolboxPanel;
 
-public class TestingMain {
+public class SpectroEditSession {
 
-    public static void main(String[] args) throws Exception {
-        LogManager.getLogManager().readConfiguration(TestingMain.class.getResourceAsStream("LogManager.properties"));
+    /**
+     * The undo manager that keeps track of changes in this session, including
+     * the clip data and the state of various tools.
+     */
+    private final UndoManager undoManager = new UndoManager();
+
+    protected SpectroEditSession(Clip c) {
+        ClipPanel cp = ClipPanel.newInstance(c);
+
         final JFrame f = new JFrame("Spectro-Edit " + Version.VERSION);
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.setLayout(new BorderLayout());
+        f.add(new JScrollPane(cp), BorderLayout.CENTER);
+        f.add(new ToolboxPanel(cp).getPanel(), BorderLayout.SOUTH);
+
+        JToolBar toolbar = new JToolBar();
+        toolbar.add(UndoRedoAction.createUndoInstance(undoManager));
+        toolbar.add(UndoRedoAction.createRedoInstance(undoManager));
+        f.add(toolbar, BorderLayout.NORTH);
+        
+        f.pack();
+        f.setLocationRelativeTo(null);
+        f.setVisible(true);
+    }
+    
+    public static SpectroEditSession createSession(File wavFile) throws UnsupportedAudioFileException, IOException {
+        Clip c = new Clip(wavFile);
+        SpectroEditSession session = new SpectroEditSession(c);
+        c.addUndoableEditListener(session.undoManager);
+        return session;
+    }
+    
+    public static void main(String[] args) throws Exception {
+        LogManager.getLogManager().readConfiguration(SpectroEditSession.class.getResourceAsStream("LogManager.properties"));
+        final JFrame f = new JFrame("Dummy frame for owning dialogs");
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 try {
@@ -45,18 +82,7 @@ public class TestingMain {
                         System.exit(0);
                     }
                     File wavFile = new File(dir, file);
-                    Clip c = new Clip(wavFile);
-                    ClipPanel cp = new ClipPanel(c);
-                    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                    f.setLayout(new BorderLayout());
-                    f.add(new JScrollPane(cp), BorderLayout.CENTER);
-                    f.add(new ToolboxPanel(cp).getPanel(), BorderLayout.SOUTH);
-
-
-                    f.pack();
-                    f.setLocationRelativeTo(null);
-                    f.setVisible(true);
-
+                    createSession(wavFile);
                 } catch (Exception e) {
                     e.printStackTrace();
                     JOptionPane.showMessageDialog(f,
@@ -68,4 +94,13 @@ public class TestingMain {
             }
         });
     }
+    
+    public void undo() {
+        undoManager.undo();
+    }
+    
+    public void redo() {
+        undoManager.redo();
+    }
+
 }

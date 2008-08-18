@@ -16,6 +16,7 @@
  */
 package net.bluecow.spectro;
 
+import java.awt.Rectangle;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +29,8 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.event.UndoableEditListener;
+import javax.swing.undo.UndoableEditSupport;
 
 /**
  * A Clip represents an audio clip of some length. The clip is split up
@@ -68,6 +71,13 @@ public class Clip {
     private double spectralScale = 10000.0;
 
     /**
+     * Stores the current edit in progress, or null if there is no edit in progress.
+     */
+    private ClipDataEdit currentEdit;
+
+    private final UndoableEditSupport undoEventSupport = new UndoableEditSupport();
+    
+    /**
      * Creates a new Clip based on the acoustical information in the given audio
      * file.
      * <p>
@@ -89,7 +99,6 @@ public class Clip {
         AudioFormat desiredFormat = AUDIO_FORMAT;
         BufferedInputStream in = new BufferedInputStream(AudioSystem.getAudioInputStream(desiredFormat, AudioSystem.getAudioInputStream(file)));
         
-        // TODO: overlapping frames and window function (windowing might be better handled in Frame)
         byte[] buf = new byte[frameSize * 2]; // 16-bit mono samples
         int n;
         in.mark(buf.length * 2);
@@ -203,4 +212,132 @@ public class Clip {
         int length = getFrameCount() * getFrameTimeSamples() * (AUDIO_FORMAT.getSampleSizeInBits() / 8) / overlap;
         return new AudioInputStream(audioData, AUDIO_FORMAT, length);
     }
+
+    /**
+     * Tells this clip that client code intends to modify some of the frame data
+     * in the given region. The data in this region will be "backed up" for
+     * purposes of revert and undo/redo.
+     * <p>
+     * In order to conserve undo/redo memory, it's best to keep this region as
+     * small as possible (don't just say you're going to edit the whole clip
+     * unless that's really true).
+     * 
+     * @param region
+     *            The region that will be edited. The x value indicates the
+     *            index of the first frame in the region, and the width
+     *            indicates the number of frames. The y value indicates the
+     *            first frequency index, and the height the number of frequency
+     *            indexes.
+     * @param description
+     *            User-visible description of the edit that is going to take
+     *            place.
+     */
+    public void beginEdit(Rectangle region, String description) {
+        if (currentEdit != null) {
+            throw new IllegalStateException("Already in an edit: " + currentEdit);
+        }
+        currentEdit = new ClipDataEdit(this, region.x, region.y, region.width, region.height);
+    }
+
+    /**
+     * Ends the edit that was previously started by
+     * {@link #beginEdit(Rectangle, String)}, and notifies listeners that the
+     * edit region has changed. There is no need to call
+     * {@link #regionChanged(Rectangle)} after this.
+     */
+    public void endEdit() {
+        if (currentEdit == null) {
+            throw new IllegalStateException("No edit is in progress");
+        }
+        currentEdit.captureNewData();
+        undoEventSupport.postEdit(currentEdit);
+        regionChanged(currentEdit.getRegion());
+        currentEdit = null;
+    }
+
+    /**
+     * Puts the undo system into a state where it accumulates edits that happen
+     * from now on. To return to the initial state (which also posts the
+     * compound edit to the undo listeners), call {@link #endCompoundEdit()}.
+     * <p>
+     * This "compound edit" state nests: three calls to this method requires
+     * three subsequent calls to endCompoundEdit() in order to return from the
+     * compound edit state.
+     * 
+     * @param presentationName
+     *            The name or phrase to show the user for this group of edits.
+     *            Should make sense as a sentence if the word "Undo" or "Redo"
+     *            is prepended.
+     */
+    public void beginCompoundEdit(String presentationName) {
+        undoEventSupport.beginUpdate(); // TODO subclass support class and grab presentation name
+    }
+
+    /**
+     * Ends the compound edit in progress. It is an error to call this method more
+     * times than {@link #beginCompoundEdit(String)} has already been called.
+     */
+    public void endCompoundEdit() {
+        undoEventSupport.endUpdate();
+    }
+
+    /**
+     * Notifies all registered ClipDataChangeListeners that the clip data has
+     * changed for the given region. This method works independently of
+     * undo/redo: it can be called whether or not an edit is in progress, and it
+     * never affects the undo/redo state.
+     * <p>
+     * Two typical use cases are for showing interim changes during an edit (for
+     * example, immediate feedback while the user is adjusting a slider) and
+     * internally, for the undo system to provide notification after completing
+     * an undo or redo operation.
+     * 
+     * @param region
+     *            The region that changed. See
+     *            {@link #beginEdit(Rectangle, String)} for a description of how
+     *            the rectangle's geometry maps to frames and frequencies.
+     */
+    public void regionChanged(Rectangle region) {
+        fireClipDataChangeEvent(region);
+    }
+    
+
+    // --------------------- ClipDataChangeEvent crap -------------------------
+    
+    private final List<ClipDataChangeListener> clipDataChangeListeners =
+        new ArrayList<ClipDataChangeListener>();
+    
+    public void addClipDataChangeListener(ClipDataChangeListener l) {
+        clipDataChangeListeners.add(l);
+    }
+
+    public void removeClipDataChangeListener(ClipDataChangeListener l) {
+        clipDataChangeListeners.remove(l);
+    }
+    
+    private void fireClipDataChangeEvent(Rectangle region) {
+        ClipDataChangeEvent e = new ClipDataChangeEvent(this, region);
+        for (int i = clipDataChangeListeners.size() - 1; i >= 0; i--) {
+            clipDataChangeListeners.get(i).clipDataChanged(e);
+        }
+    }
+
+    
+    // -------------------- Undo event support ---------------------
+    
+    public void addUndoableEditListener(UndoableEditListener l) {
+        undoEventSupport.addUndoableEditListener(l);
+    }
+
+    public UndoableEditListener[] getUndoableEditListeners() {
+        return undoEventSupport.getUndoableEditListeners();
+    }
+
+    public void removeUndoableEditListener(UndoableEditListener l) {
+        undoEventSupport.removeUndoableEditListener(l);
+    }
+    
+    
+    
+
 }

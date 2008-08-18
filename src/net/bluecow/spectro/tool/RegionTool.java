@@ -50,6 +50,7 @@ public class RegionTool implements Tool {
         JButton scaleUpButton = new JButton("Scale Up");
         scaleUpButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                
                 scale(1.1);
             }
         });
@@ -94,17 +95,6 @@ public class RegionTool implements Tool {
         clipPanel.updateRegion(normalRegion);
     }
 
-    /**
-     * Asks the clip panel to update its idea of the underlying spectral data. This
-     * must be called after modifying any of the clip's frame data in order for the
-     * changes to be visible on screen. This method also invokes {@link #repaintRegion()}
-     * for you, so there is no need to call it after calling this method.
-     */
-    public void updateImage() {
-        clipPanel.updateImage(region);
-        repaintRegion();
-    }
-    
     /**
      * Ensures the given rectangle has nonnegative width and height.
      * The rectangle's actual geometry is unchanged.
@@ -227,12 +217,13 @@ public class RegionTool implements Tool {
     public void scale(double amount) {
         if (region == null) return;
         Rectangle frameRegion = clipPanel.toClipCoords(new Rectangle(region));
+        clip.beginEdit(frameRegion, "Scale region");
         for (int i = frameRegion.x; i < frameRegion.x + frameRegion.width; i++) {
             Frame frame = clip.getFrame(i);
             for (int j = frameRegion.y; j < frameRegion.y + frameRegion.height; j++) {
                 frame.setReal(j, frame.getReal(j) * amount);
             }
         }
-        updateImage();
+        clip.endEdit();
     }
 }
