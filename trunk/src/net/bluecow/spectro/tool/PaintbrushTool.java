@@ -82,19 +82,20 @@ public class PaintbrushTool implements Tool {
     private class PaintbrushMouseHandler implements MouseMotionListener, MouseListener {
 
         public void mouseDragged(MouseEvent e) {
-            int radius = brushSlider.getValue();
             Point p = clipPanel.toClipCoords(e.getPoint());
+            int radius = brushSlider.getValue();
+            Rectangle updateRegion = new Rectangle(
+                    p.x - radius, p.y - radius,
+                    radius * 2, radius * 2);
+
+            clip.beginEdit(updateRegion, "Brush stroke");
             for (int x = p.x - radius; x < p.x + radius; x++) {
                 Frame f = clip.getFrame(x);
                 for (int y = p.y - radius; y < p.y + radius; y++) {
                     f.setReal(y, 0.0);
                 }
             }
-            Rectangle updateRegion = new Rectangle(e.getX() - radius, e.getY() - radius, radius * 2, radius * 2);
-            clipPanel.updateImage(updateRegion);
-            clipPanel.repaint(e.getX() - radius, e.getY() - radius, radius * 2, radius * 2);
-//          clipPanel.repaint(updateRegion);
-//            clipPanel.repaint(p.x, p.y, radius * 2, radius * 2);
+            clip.endEdit();
         }
 
         public void mouseMoved(MouseEvent e) {
@@ -114,11 +115,12 @@ public class PaintbrushTool implements Tool {
         }
 
         public void mousePressed(MouseEvent e) {
+            clip.beginCompoundEdit("Painting");
             mouseDragged(e);
         }
 
         public void mouseReleased(MouseEvent e) {
-            // don't care?
+            clip.endCompoundEdit();
         }
         
     }

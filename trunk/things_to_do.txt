@@ -1,6 +1,7 @@
 Not yet done:
 
--Undo/redo for modifications
+-(internal) make an undo manager that fires events after undo and redo so the actions can change state
+-(internal) Move region features into ClipPanel; make individual tools for each region op
 -better user interface for choosing a tool and changing its properties
  -paint tool: brush shape/size
  -region tool:
@@ -9,7 +10,7 @@ Not yet done:
   -zero data under a threshold
   -flip data upside down
   -copy/paste with option of logarithmic or linear
--API fix: it should be a secret that the clip data is painted upside down.
+-(internal) API fix: it should be a secret that the clip data is painted upside down.
  practical upshot: remove the ClipPanel.toClipCoords() method, and everything
                    should still work the same.
  easiest fix: just reverse the DCT results after computing, and re-reverse them
@@ -32,6 +33,7 @@ Not yet done:
 
 Release 0.3:
 -Region tool
+-Undo/redo for modifications (painting and regions)
 
 
 Release 0.2: August 9, 2008

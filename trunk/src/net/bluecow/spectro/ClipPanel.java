@@ -47,7 +47,23 @@ public class ClipPanel extends JPanel {
      */
     private Rectangle region;
     
-    public ClipPanel(Clip clip) {
+    private ClipDataChangeListener clipDataChangeHandler = new ClipDataChangeListener() {
+
+        public void clipDataChanged(ClipDataChangeEvent e) {
+            Rectangle r = toScreenCoords(e.getRegion());
+            updateImage(r);
+            repaint(r);
+        }
+        
+    };
+    
+    public static ClipPanel newInstance(Clip clip) {
+        ClipPanel cp = new ClipPanel(clip);
+        clip.addClipDataChangeListener(cp.clipDataChangeHandler);
+        return cp;
+    }
+    
+    private ClipPanel(Clip clip) {
         this.clip = clip;
         setPreferredSize(new Dimension(clip.getFrameCount(), clip.getFrameFreqSamples()));
         img = new BufferedImage(clip.getFrameCount(), clip.getFrameFreqSamples(), BufferedImage.TYPE_INT_RGB);
@@ -116,6 +132,11 @@ public class ClipPanel extends JPanel {
         return p;
     }
 
+    public Rectangle toScreenCoords(Rectangle r) {
+        // These operations are actually the same (the operation is its own inverse)
+        return toClipCoords(r);
+    }
+
     /**
      * Updates the image based on the existing Clip data and the settings in
      * this panel (such as the multiplier).
@@ -124,7 +145,7 @@ public class ClipPanel extends JPanel {
      *            The region to update, in screen co-ordinates. Null means to
      *            update the whole image.
      */
-    public void updateImage(Rectangle region) {
+    private void updateImage(Rectangle region) {
         if (region == null) {
             region = new Rectangle(0, 0, clip.getFrameCount(), clip.getFrameFreqSamples());
         } else {
