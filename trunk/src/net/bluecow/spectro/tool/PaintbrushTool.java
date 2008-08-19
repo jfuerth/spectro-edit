@@ -68,6 +68,7 @@ public class PaintbrushTool implements Tool {
     public void activate(ClipPanel cp) {
         clipPanel = cp;
         clip = clipPanel.getClip();
+        clipPanel.setRegionMode(false);
         clipPanel.addMouseListener(mouseHandler);
         clipPanel.addMouseMotionListener(mouseHandler);
     }
