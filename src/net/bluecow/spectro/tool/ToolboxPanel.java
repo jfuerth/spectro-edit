@@ -77,7 +77,7 @@ public class ToolboxPanel {
 
         toolChooser = new JComboBox();
         toolChooser.addItem(new PaintbrushTool());
-        toolChooser.addItem(new RegionTool());
+        toolChooser.addItem(new RegionScaleTool());
 //        toolChooser.setSelectedItem(null);
         toolSettingsPanel.add(toolChooser, BorderLayout.WEST);
 

@@ -22,6 +22,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.logging.Logger;
@@ -42,11 +45,24 @@ public class ClipPanel extends JPanel {
     private double spectralToScreenMultiplier = 6000.0;
     
     /**
-     * A rectangular frame that's manipulated from outside this class.
-     * See {@link #updateRegion(Rectangle)} for details.
+     * A rectangular frame that some tools use as a bounding box for
+     * the changes they make. The region feature can be turned on and off.
      */
     private Rectangle region;
     
+    /**
+     * The place where the region was last time it was repainted. Starts off
+     * as null, and gets reset to null whenever region selection is turned off.
+     */
+    private Rectangle oldRegion;
+
+    /**
+     * Flag to indicate whether or not region mode is active.
+     */
+    private boolean regionMode;
+    
+    private final RegionMouseHandler mouseHandler = new RegionMouseHandler();
+
     private ClipDataChangeListener clipDataChangeHandler = new ClipDataChangeListener() {
 
         public void clipDataChanged(ClipDataChangeEvent e) {
@@ -229,16 +245,11 @@ public class ClipPanel extends JPanel {
     /**
      * Updates the location and size of a rectangular shape that's painted over
      * the spectral data. Tools can use this to track selections.
-     * <p>
-     * Future: It probably would make more sense to build the concept of region
-     * selection right into this class, and let the tools read out the selected
-     * region when they want it.
      * 
-     * @param region
+     * @param tempRegion
      */
-    public void updateRegion(Rectangle newRegion) {
-        Rectangle oldRegion = region;
-        region = newRegion == null ? null : new Rectangle(newRegion);
+    public void repaintRegion() {
+        Rectangle newRegion = (region == null) ? null : new Rectangle(region);
         if (oldRegion != null && newRegion == null) {
             repaint(oldRegion.x, oldRegion.y, oldRegion.width + 1, oldRegion.height + 1);
         } else if (oldRegion == null && newRegion != null) {
@@ -247,5 +258,170 @@ public class ClipPanel extends JPanel {
             oldRegion.add(newRegion);
             repaint(oldRegion.x, oldRegion.y, oldRegion.width + 1, oldRegion.height + 1);
         }
+        oldRegion = newRegion;
     }
+
+    /**
+     * Turns region selection mode on or off. Attempting to set the region mode
+     * to its current setting is not an error, but has no effect.
+     * 
+     * @param on
+     *            The new setting for region mode (true for on; false for off).
+     */
+    public void setRegionMode(boolean on) {
+        if (on != regionMode) {
+            if (on) {
+                regionMode = true;
+                addMouseListener(mouseHandler);
+                addMouseMotionListener(mouseHandler);
+            } else {
+                regionMode = false;
+                if (region != null) {
+                    region = null;
+                    repaintRegion();
+                    oldRegion = null;
+                }
+                removeMouseListener(mouseHandler);
+                removeMouseMotionListener(mouseHandler);
+            }
+        }
+    }
+
+    /**
+     * Returns a copy of the currently-selected region of this clip panel. If
+     * there is no region selected, returns null.
+     * 
+     * @return A new rectangle of this clip's selected region. The copy is
+     *         independent of this clip panel--you can modify it if you wish.
+     */
+    public Rectangle getRegion() {
+        if (region == null) {
+            return null;
+        } else {
+            return new Rectangle(region);
+        }
+    }
+    
+    /**
+     * Enumeration of states for the {@link RegionMouseHandler}.
+     */
+    enum MouseMode { IDLE, SIZING, MOVING }
+
+    /**
+     * Handles mouse events on this panel for purposes of creating, moving, and resizing
+     * the region.
+     */
+    private class RegionMouseHandler implements MouseMotionListener, MouseListener {
+
+        MouseMode mode = MouseMode.IDLE;
+        
+        /**
+         * The offset from the region's (x,y) origin that the mouse should
+         * stay at when the region is being moved.
+         */
+        Point moveHandle;
+        
+        Rectangle tempRegion;
+        
+//        /**
+//         * The place where the user clicked to start resizing the region.
+//         */
+//        Point regionOrigin;
+        
+        public void mouseDragged(MouseEvent e) {
+            switch (mode) {
+            case IDLE:
+                startRect(e.getPoint());
+                break;
+            case SIZING:
+                resizeRect(e.getPoint());
+                break;
+            case MOVING:
+                moveRect(e.getPoint());
+                break;
+            }
+            region = normalized(tempRegion);
+            repaintRegion();
+        }
+
+        public void mousePressed(MouseEvent e) {
+            tempRegion = normalized(region);
+            Point p = e.getPoint();
+            if (tempRegion != null && tempRegion.contains(p)) {
+                mode = MouseMode.MOVING;
+                moveHandle = new Point(p.x - tempRegion.x, p.y - tempRegion.y);
+            } else {
+                startRect(p);
+                mode = MouseMode.SIZING;
+            }
+            region = normalized(tempRegion);
+            repaintRegion();
+        }
+
+        public void mouseReleased(MouseEvent e) {
+            mode = MouseMode.IDLE;
+            
+            region = normalized(tempRegion);
+            tempRegion = null;
+            repaintRegion();
+        }
+        
+        public void mouseMoved(MouseEvent e) {
+            // don't care
+        }
+
+        public void mouseClicked(MouseEvent e) {
+            // don't care
+        }
+
+        public void mouseEntered(MouseEvent e) {
+            // don't care
+        }
+
+        public void mouseExited(MouseEvent e) {
+            // don't care
+        }
+        
+        private void startRect(Point p) {
+            tempRegion = new Rectangle(p.x, p.y, 0, 0);
+        }
+
+        private void resizeRect(Point p) {
+            tempRegion.width = p.x - tempRegion.x;
+            tempRegion.height = p.y - tempRegion.y;
+            logger.finer("Resizing region to: " + tempRegion);
+        }
+
+        private void moveRect(Point p) {
+            tempRegion.x = p.x - moveHandle.x;
+            tempRegion.y = p.y - moveHandle.y;
+        }
+
+        /**
+         * Creates a copy of the given rectangle with nonnegative width and
+         * height. The new rectangle's actual geometry is the same as the given
+         * rectangle's.
+         * 
+         * @param rect
+         *            The source rectangle. This rectangle will not be changed
+         *            as a result of this call. You can pass in null, which
+         *            results in a null return value.
+         * @return A rectangle with the same position and size as rect, but with
+         *         nonnegative width and height. Returns null if rect is null.
+         */
+        private Rectangle normalized(Rectangle rect) {
+            if (rect == null) return null;
+            rect = new Rectangle(rect);
+            if (rect.width < 0) {
+                rect.x += rect.width;
+                rect.width *= -1;
+            }
+            if (rect.height < 0) {
+                rect.y += rect.height;
+                rect.height *= -1;
+            }
+            return rect;
+        }
+    }
+
 }

@@ -1,10 +1,9 @@
 Not yet done:
 
 -(internal) make an undo manager that fires events after undo and redo so the actions can change state
--(internal) Move region features into ClipPanel; make individual tools for each region op
 -better user interface for choosing a tool and changing its properties
  -paint tool: brush shape/size
- -region tool:
+ -region tools:
   -zero out data over a threshold
   -scale data up or down
   -zero data under a threshold
@@ -34,7 +33,7 @@ Not yet done:
 Release 0.3:
 -Region tool
 -Undo/redo for modifications (painting and regions)
-
+-(internal) Moved region features into ClipPanel so it's easier to make new region tools
 
 Release 0.2: August 9, 2008
 Fixes to save dialog:
