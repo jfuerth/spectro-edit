@@ -1,6 +1,7 @@
 Not yet done:
 
--(internal) make an undo manager that fires events after undo and redo so the actions can change state
+-fix undo logic in scale region tool so undoing while an edit is in progress works
+-(internal) clip panel should fire undo events when region changes
 -better user interface for choosing a tool and changing its properties
  -paint tool: brush shape/size
  -region tools:
@@ -9,6 +10,7 @@ Not yet done:
   -zero data under a threshold
   -flip data upside down
   -copy/paste with option of logarithmic or linear
+-(internal) make an undo manager that fires events after undo and redo so the actions can change state
 -(internal) API fix: it should be a secret that the clip data is painted upside down.
  practical upshot: remove the ClipPanel.toClipCoords() method, and everything
                    should still work the same.
@@ -34,6 +36,11 @@ Release 0.3:
 -Region tool
 -Undo/redo for modifications (painting and regions)
 -(internal) Moved region features into ClipPanel so it's easier to make new region tools
+-now the window is never wider than the screen when opening a new clip
+-bigger scroll increment on clip panel
+-moved save button, undo/redo, and shuttle controls to top (into toolbar)
+-(internal) clip panel now fires property change events when region changes
+-"scale region" tool now uses a slider instead of two buttons
 
 Release 0.2: August 9, 2008
 Fixes to save dialog:

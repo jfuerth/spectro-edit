@@ -17,11 +17,14 @@
 package net.bluecow.spectro;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FileDialog;
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.LogManager;
 
+import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -30,6 +33,9 @@ import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.undo.UndoManager;
 
+import net.bluecow.spectro.action.PlayPauseAction;
+import net.bluecow.spectro.action.RewindAction;
+import net.bluecow.spectro.action.SaveAction;
 import net.bluecow.spectro.action.UndoRedoAction;
 import net.bluecow.spectro.tool.ToolboxPanel;
 
@@ -41,8 +47,12 @@ public class SpectroEditSession {
      */
     private final UndoManager undoManager = new UndoManager();
 
-    protected SpectroEditSession(Clip c) {
+    private final PlayerThread playerThread;
+    
+    protected SpectroEditSession(Clip c) throws LineUnavailableException {
         ClipPanel cp = ClipPanel.newInstance(c);
+        playerThread = new PlayerThread(c);
+        playerThread.start();
 
         final JFrame f = new JFrame("Spectro-Edit " + Version.VERSION);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -51,16 +61,24 @@ public class SpectroEditSession {
         f.add(new ToolboxPanel(cp).getPanel(), BorderLayout.SOUTH);
 
         JToolBar toolbar = new JToolBar();
+        toolbar.add(new SaveAction(c, f));
         toolbar.add(UndoRedoAction.createUndoInstance(undoManager));
         toolbar.add(UndoRedoAction.createRedoInstance(undoManager));
+        toolbar.addSeparator();
+        toolbar.add(new PlayPauseAction(playerThread));
+        toolbar.add(new RewindAction(playerThread));
         f.add(toolbar, BorderLayout.NORTH);
         
         f.pack();
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        f.setSize(
+                Math.min(screenSize.width - 50, f.getWidth()),
+                Math.min(screenSize.height - 50, f.getHeight()));
         f.setLocationRelativeTo(null);
         f.setVisible(true);
     }
     
-    public static SpectroEditSession createSession(File wavFile) throws UnsupportedAudioFileException, IOException {
+    public static SpectroEditSession createSession(File wavFile) throws UnsupportedAudioFileException, IOException, LineUnavailableException {
         Clip c = new Clip(wavFile);
         SpectroEditSession session = new SpectroEditSession(c);
         c.addUndoableEditListener(session.undoManager);

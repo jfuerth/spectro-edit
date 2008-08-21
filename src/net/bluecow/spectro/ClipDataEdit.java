@@ -61,6 +61,17 @@ public class ClipDataEdit extends AbstractUndoableEdit {
     }
     
     /**
+     * Convenience method for {@link #ClipDataEdit(Clip, int, int, int, int)}
+     * that passes in the given rectangle's position and size.
+     * 
+     * @param clip The clip to capture data from
+     * @param r The region to capture
+     */
+    public ClipDataEdit(Clip clip, Rectangle r) {
+        this(clip, r.x, r.y, r.width, r.height);
+    }
+
+    /**
      * Copies the current contents of the same clip region that was captured
      * during the constructor invocation. This will be the REDO data.
      */
@@ -123,4 +134,29 @@ public class ClipDataEdit extends AbstractUndoableEdit {
         return new Rectangle(firstFrame, firstFreqIndex, oldData.length, oldData[0].length);
     }
 
+    /**
+     * Returns true if this edit covers exactly the same region as the given
+     * rectangle.
+     * 
+     * @param r The rectangle to check. If null, returns false.
+     */
+    public boolean isSameRegion(Rectangle r) {
+        if (r == null) {
+            return false;
+        } else {
+            return
+                r.x == firstFrame &&
+                r.y == firstFreqIndex &&
+                r.width == oldData.length &&
+                r.height == oldData[0].length;
+        }
+    }
+
+    /**
+     * Returns the old data. Modifications to the returned array will affect the
+     * stored undo data, so client code should avoid modifying it.
+     */
+    public double[][] getOldData() {
+        return oldData;
+    }
 }

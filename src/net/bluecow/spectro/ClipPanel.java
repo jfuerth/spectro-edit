@@ -30,8 +30,9 @@ import java.awt.image.BufferedImage;
 import java.util.logging.Logger;
 
 import javax.swing.JPanel;
+import javax.swing.Scrollable;
 
-public class ClipPanel extends JPanel {
+public class ClipPanel extends JPanel implements Scrollable {
 
     private static final Logger logger = Logger.getLogger(ClipPanel.class.getName());
     
@@ -243,12 +244,11 @@ public class ClipPanel extends JPanel {
     }
 
     /**
-     * Updates the location and size of a rectangular shape that's painted over
-     * the spectral data. Tools can use this to track selections.
-     * 
-     * @param tempRegion
+     * Produces a repaint request that covers the old region as it existed last
+     * time this method was called, and the new region as of now.  It shouldn't
+     * be necessary to call this method directly; use {@link #setRegion(Rectangle)}.
      */
-    public void repaintRegion() {
+    private void repaintRegion() {
         Rectangle newRegion = (region == null) ? null : new Rectangle(region);
         if (oldRegion != null && newRegion == null) {
             repaint(oldRegion.x, oldRegion.y, oldRegion.width + 1, oldRegion.height + 1);
@@ -276,11 +276,8 @@ public class ClipPanel extends JPanel {
                 addMouseMotionListener(mouseHandler);
             } else {
                 regionMode = false;
-                if (region != null) {
-                    region = null;
-                    repaintRegion();
-                    oldRegion = null;
-                }
+                setRegion(null);
+                oldRegion = null;
                 removeMouseListener(mouseHandler);
                 removeMouseMotionListener(mouseHandler);
             }
@@ -300,6 +297,18 @@ public class ClipPanel extends JPanel {
         } else {
             return new Rectangle(region);
         }
+    }
+    
+    /**
+     * Updates the geometry of the selected region.
+     * 
+     * @param r The new location and size for the selected region.
+     */
+    private void setRegion(Rectangle r) {
+        Rectangle oldRegion = region;
+        region = normalized(r);
+        repaintRegion();
+        firePropertyChange("region", oldRegion, region);
     }
     
     /**
@@ -340,8 +349,7 @@ public class ClipPanel extends JPanel {
                 moveRect(e.getPoint());
                 break;
             }
-            region = normalized(tempRegion);
-            repaintRegion();
+            setRegion(tempRegion);
         }
 
         public void mousePressed(MouseEvent e) {
@@ -354,16 +362,14 @@ public class ClipPanel extends JPanel {
                 startRect(p);
                 mode = MouseMode.SIZING;
             }
-            region = normalized(tempRegion);
-            repaintRegion();
+            setRegion(tempRegion);
         }
 
         public void mouseReleased(MouseEvent e) {
             mode = MouseMode.IDLE;
             
-            region = normalized(tempRegion);
+            setRegion(tempRegion);
             tempRegion = null;
-            repaintRegion();
         }
         
         public void mouseMoved(MouseEvent e) {
@@ -397,31 +403,55 @@ public class ClipPanel extends JPanel {
             tempRegion.y = p.y - moveHandle.y;
         }
 
-        /**
-         * Creates a copy of the given rectangle with nonnegative width and
-         * height. The new rectangle's actual geometry is the same as the given
-         * rectangle's.
-         * 
-         * @param rect
-         *            The source rectangle. This rectangle will not be changed
-         *            as a result of this call. You can pass in null, which
-         *            results in a null return value.
-         * @return A rectangle with the same position and size as rect, but with
-         *         nonnegative width and height. Returns null if rect is null.
-         */
-        private Rectangle normalized(Rectangle rect) {
-            if (rect == null) return null;
-            rect = new Rectangle(rect);
-            if (rect.width < 0) {
-                rect.x += rect.width;
-                rect.width *= -1;
-            }
-            if (rect.height < 0) {
-                rect.y += rect.height;
-                rect.height *= -1;
-            }
-            return rect;
+    }
+
+    /**
+     * Creates a copy of the given rectangle with nonnegative width and
+     * height. The new rectangle's actual geometry is the same as the given
+     * rectangle's.
+     * 
+     * @param rect
+     *            The source rectangle. This rectangle will not be changed
+     *            as a result of this call. You can pass in null, which
+     *            results in a null return value.
+     * @return A rectangle with the same position and size as rect, but with
+     *         nonnegative width and height. Returns null if rect is null.
+     */
+    private Rectangle normalized(Rectangle rect) {
+        if (rect == null) return null;
+        rect = new Rectangle(rect);
+        if (rect.width < 0) {
+            rect.x += rect.width;
+            rect.width *= -1;
         }
+        if (rect.height < 0) {
+            rect.y += rect.height;
+            rect.height *= -1;
+        }
+        return rect;
+    }
+
+    
+    // --------------------- Scrollable interface ------------------------
+    
+    public Dimension getPreferredScrollableViewportSize() {
+        return getPreferredSize();
+    }
+
+    public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return (int) (visibleRect.width * 0.9);
+    }
+
+    public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return 50;
+    }
+
+    public boolean getScrollableTracksViewportHeight() {
+        return false;
+    }
+
+    public boolean getScrollableTracksViewportWidth() {
+        return false;
     }
 
 }
