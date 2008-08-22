@@ -31,7 +31,19 @@ import java.util.logging.Logger;
 
 import javax.swing.JPanel;
 import javax.swing.Scrollable;
+import javax.swing.event.UndoableEditListener;
+import javax.swing.undo.AbstractUndoableEdit;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoableEditSupport;
 
+/**
+ * GUI component for looking at and modifying clips.
+ * <p>
+ * This component fires undoable edit events regarding its region
+ * selection state, so it would be wise to attach it to the same
+ * undo manager that the clip is attached to.
+ */
 public class ClipPanel extends JPanel implements Scrollable {
 
     private static final Logger logger = Logger.getLogger(ClipPanel.class.getName());
@@ -64,6 +76,12 @@ public class ClipPanel extends JPanel implements Scrollable {
     
     private final RegionMouseHandler mouseHandler = new RegionMouseHandler();
 
+    /**
+     * Gets set to true while an undo is in progress. When true, undo
+     * events are not fired.
+     */
+    private boolean undoing;
+    
     private ClipDataChangeListener clipDataChangeHandler = new ClipDataChangeListener() {
 
         public void clipDataChanged(ClipDataChangeEvent e) {
@@ -73,6 +91,8 @@ public class ClipPanel extends JPanel implements Scrollable {
         }
         
     };
+    
+    private final UndoableEditSupport undoSupport = new UndoableEditSupport(this);
     
     public static ClipPanel newInstance(Clip clip) {
         ClipPanel cp = new ClipPanel(clip);
@@ -305,10 +325,38 @@ public class ClipPanel extends JPanel implements Scrollable {
      * @param r The new location and size for the selected region.
      */
     private void setRegion(Rectangle r) {
-        Rectangle oldRegion = region;
+        final Rectangle oldRegion = region;
         region = normalized(r);
         repaintRegion();
         firePropertyChange("region", oldRegion, region);
+        if (!undoing) {
+            undoSupport.postEdit(new AbstractUndoableEdit() {
+
+                private final Rectangle oldr = oldRegion;
+                private final Rectangle newr = region;
+
+                @Override
+                public void undo() throws CannotUndoException {
+                    super.undo();
+                    undoing = true;
+                    setRegion(oldr);
+                    undoing = false;
+                }
+
+                @Override
+                public void redo() throws CannotRedoException {
+                    super.redo();
+                    undoing = true;
+                    setRegion(newr);
+                    undoing = false;
+                }
+
+                @Override
+                public boolean isSignificant() {
+                    return false;
+                }
+            });
+        }
     }
     
     /**
@@ -454,4 +502,13 @@ public class ClipPanel extends JPanel implements Scrollable {
         return false;
     }
 
+    public void addUndoableEditListener(UndoableEditListener l) {
+        undoSupport.addUndoableEditListener(l);
+    }
+
+    public void removeUndoableEditListener(UndoableEditListener l) {
+        undoSupport.removeUndoableEditListener(l);
+    }
+
+    
 }
