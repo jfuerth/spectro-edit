@@ -51,6 +51,8 @@ public class SpectroEditSession {
     
     protected SpectroEditSession(Clip c) throws LineUnavailableException {
         ClipPanel cp = ClipPanel.newInstance(c);
+        cp.addUndoableEditListener(undoManager);
+        
         playerThread = new PlayerThread(c);
         playerThread.start();
 

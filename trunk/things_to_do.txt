@@ -1,6 +1,7 @@
 Not yet done:
 
 -fix undo logic in scale region tool so undoing while an edit is in progress works
+ -session could fire a pre-undo event which would give us a chance to commit the change
 -(internal) clip panel should fire undo events when region changes
 -better user interface for choosing a tool and changing its properties
  -paint tool: brush shape/size
