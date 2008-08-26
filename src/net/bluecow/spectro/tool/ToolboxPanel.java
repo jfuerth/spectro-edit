@@ -17,15 +17,17 @@
 package net.bluecow.spectro.tool;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.Box;
-import javax.swing.JComboBox;
+import javax.swing.ButtonGroup;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -51,9 +53,12 @@ public class ToolboxPanel {
      */
     private final JPanel panel;
     
+    private final JPanel toolButtonPanel;
     private final JPanel toolSettingsPanel;
+    private final JPanel viewSettingsPanel;
     
-    private final JComboBox toolChooser;
+    private final ButtonGroup toolButtonGroup = new ButtonGroup();
+    
     
     /**
      * The current tool.
@@ -64,35 +69,41 @@ public class ToolboxPanel {
         this.session = session;
         this.clipPanel = session.getClipPanel();
         
-        JPanel topPanel = new JPanel();
-        topPanel.add(makeBrightnessSlider());
+        viewSettingsPanel = new JPanel();
+        viewSettingsPanel.add(makeBrightnessSlider());
         
         toolSettingsPanel = new JPanel(new BorderLayout());
 
-        toolChooser = new JComboBox();
-        toolChooser.addItem(new PaintbrushTool());
-        toolChooser.addItem(new RegionScaleTool());
-        toolSettingsPanel.add(toolChooser, BorderLayout.WEST);
+        toolButtonPanel = new JPanel(new FlowLayout());
+        JRadioButton paintbrushToolButton = new ToolButton(new PaintbrushTool(), "paintbrush", toolButtonGroup);
+        JRadioButton regionScaleToolButton = new ToolButton(new RegionScaleTool(), "page_white_put", toolButtonGroup); // TODO better icon
 
-        toolChooser.addActionListener(new ActionListener() {
+        toolButtonPanel.add(paintbrushToolButton);
+        toolButtonPanel.add(regionScaleToolButton);
+        
+        ActionListener actionHandler = new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (currentTool != null) {
                     currentTool.deactivate();
                     toolSettingsPanel.remove(currentTool.getSettingsPanel());
                 }
-                currentTool = (Tool) toolChooser.getSelectedItem();
+                currentTool = ((ToolButton) e.getSource()).getTool();
                 currentTool.activate(ToolboxPanel.this.session);
                 toolSettingsPanel.add(currentTool.getSettingsPanel(), BorderLayout.CENTER);
                 panel.revalidate();
             }
-        });
+        };
+
+        paintbrushToolButton.addActionListener(actionHandler);
+        regionScaleToolButton.addActionListener(actionHandler);
         
-        panel = new JPanel(new GridLayout(2, 1));
-        panel.add(topPanel);
+        panel = new JPanel(new GridLayout(3, 1));
+        panel.add(toolButtonPanel);
         panel.add(toolSettingsPanel);
+        panel.add(viewSettingsPanel);
         
         // activates the action listener to select the default tool (must be done last)
-        toolChooser.setSelectedIndex(0);
+        paintbrushToolButton.setSelected(true);
     }
 
     public JComponent makeBrightnessSlider() {

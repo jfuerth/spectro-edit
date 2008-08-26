@@ -16,6 +16,7 @@
  */
 package net.bluecow.spectro.tool;
 
+import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -55,9 +56,9 @@ public class PaintbrushTool implements Tool {
      * activate it with {@link #activate(ClipPanel)}.
      */
     public PaintbrushTool() {
-        settingsPanel = new JPanel(new FlowLayout());
-        settingsPanel.add(brushSlider = new JSlider(1, 20, 1));
-        settingsPanel.add(brushSizeLabel = new JLabel());
+        settingsPanel = new JPanel(new BorderLayout());
+        settingsPanel.add(brushSizeLabel = new JLabel(), BorderLayout.NORTH);
+        settingsPanel.add(brushSlider = new JSlider(1, 20, 1), BorderLayout.CENTER);
         brushSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 brushSizeLabel.setText("Paintbrush size: " + brushSlider.getValue());
