@@ -35,6 +35,7 @@ import javax.swing.event.UndoableEditListener;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoableEdit;
 import javax.swing.undo.UndoableEditSupport;
 
 /**
@@ -330,32 +331,7 @@ public class ClipPanel extends JPanel implements Scrollable {
         repaintRegion();
         firePropertyChange("region", oldRegion, region);
         if (!undoing) {
-            undoSupport.postEdit(new AbstractUndoableEdit() {
-
-                private final Rectangle oldr = oldRegion;
-                private final Rectangle newr = region;
-
-                @Override
-                public void undo() throws CannotUndoException {
-                    super.undo();
-                    undoing = true;
-                    setRegion(oldr);
-                    undoing = false;
-                }
-
-                @Override
-                public void redo() throws CannotRedoException {
-                    super.redo();
-                    undoing = true;
-                    setRegion(newr);
-                    undoing = false;
-                }
-
-                @Override
-                public boolean isSignificant() {
-                    return false;
-                }
-            });
+            undoSupport.postEdit(new RegionMoveEdit(oldRegion));
         }
     }
     
@@ -479,9 +455,56 @@ public class ClipPanel extends JPanel implements Scrollable {
         return rect;
     }
 
+    private final class RegionMoveEdit extends AbstractUndoableEdit {
+        private Rectangle oldr;
+        private final Rectangle newr = region;
+
+        private RegionMoveEdit(Rectangle oldRegion) {
+            oldr = oldRegion;
+        }
+
+        @Override
+        public void undo() throws CannotUndoException {
+            super.undo();
+            undoing = true;
+            setRegion(oldr);
+            undoing = false;
+        }
+
+        @Override
+        public void redo() throws CannotRedoException {
+            super.redo();
+            undoing = true;
+            setRegion(newr);
+            undoing = false;
+        }
+
+        @Override
+        public boolean isSignificant() {
+            return false;
+        }
+
+        @Override
+        public boolean replaceEdit(UndoableEdit anEdit) {
+            if (anEdit instanceof RegionMoveEdit) {
+                RegionMoveEdit replaceMe = (RegionMoveEdit) anEdit;
+                oldr = replaceMe.oldr;
+                replaceMe.die();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        
+        @Override
+        public String toString() {
+            return "Region move: " + oldr + " -> " + newr;
+        }
+    }
+    
     
     // --------------------- Scrollable interface ------------------------
-    
+
     public Dimension getPreferredScrollableViewportSize() {
         return getPreferredSize();
     }

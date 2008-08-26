@@ -31,11 +31,18 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import net.bluecow.spectro.ClipPanel;
+import net.bluecow.spectro.SpectroEditSession;
 
 public class ToolboxPanel {
 
     /**
-     * The clip panel we're modifying settings for.
+     * The session this toolbox panel lives in.
+     */
+    private final SpectroEditSession session;
+    
+    /**
+     * The clip panel we're modifying settings for. This is meant to
+     * be the same clipPanel that belongs to {@link #session}.
      */
     private final ClipPanel clipPanel;
     
@@ -52,9 +59,10 @@ public class ToolboxPanel {
      * The current tool.
      */
     private Tool currentTool;
-    
-    public ToolboxPanel(ClipPanel cp) {
-        this.clipPanel = cp;
+
+    public ToolboxPanel(SpectroEditSession session) {
+        this.session = session;
+        this.clipPanel = session.getClipPanel();
         
         JPanel topPanel = new JPanel();
         topPanel.add(makeBrightnessSlider());
@@ -73,7 +81,7 @@ public class ToolboxPanel {
                     toolSettingsPanel.remove(currentTool.getSettingsPanel());
                 }
                 currentTool = (Tool) toolChooser.getSelectedItem();
-                currentTool.activate(clipPanel);
+                currentTool.activate(ToolboxPanel.this.session);
                 toolSettingsPanel.add(currentTool.getSettingsPanel(), BorderLayout.CENTER);
                 panel.revalidate();
             }

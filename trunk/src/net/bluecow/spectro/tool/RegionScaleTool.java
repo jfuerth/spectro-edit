@@ -32,20 +32,21 @@ import net.bluecow.spectro.Clip;
 import net.bluecow.spectro.ClipDataEdit;
 import net.bluecow.spectro.ClipPanel;
 import net.bluecow.spectro.Frame;
+import net.bluecow.spectro.SpectroEditSession;
 
 public class RegionScaleTool implements Tool {
 
     private ClipPanel clipPanel;
     private Clip clip;
-    
+
     private final PropertyChangeListener clipEventHandler = new PropertyChangeListener() {
 
         public void propertyChange(PropertyChangeEvent evt) {
             if ("region".equals(evt.getPropertyName())) {
-                if (origData != null) {
-                    clip.endEdit();
-                    origData = null;
-                }
+//                if (origData != null) {
+//                    clip.endEdit();
+//                    origData = null;
+//                }
                 scaleSlider.setValue(initialScale);
             }
         }
@@ -73,7 +74,9 @@ public class RegionScaleTool implements Tool {
         scaleSlider.addChangeListener(new ChangeListener() {
 
             public void stateChanged(ChangeEvent e) {
-                scaleRegion(scaleSlider.getValue() / 100.0);
+                if (scaleSlider.getValueIsAdjusting()) {
+                    scaleRegion(scaleSlider.getValue() / 100.0);
+                }
                 // TODO fire undo event for slider position
             }
             
@@ -81,14 +84,18 @@ public class RegionScaleTool implements Tool {
         settingsPanel.add(scaleSlider);
     }
 
-    public void activate(ClipPanel cp) {
-        this.clipPanel = cp;
+    public void activate(SpectroEditSession session) {
+        this.clipPanel = session.getClipPanel();
         clip = clipPanel.getClip();
         clipPanel.setRegionMode(true);
         clipPanel.addPropertyChangeListener("region", clipEventHandler);
     }
 
     public void deactivate() {
+        if (origData != null) {
+//            clip.endEdit();
+            origData = null;
+        }
         clipPanel.removePropertyChangeListener("region", clipEventHandler);
         clip = null;
         clipPanel = null;
@@ -117,8 +124,9 @@ public class RegionScaleTool implements Tool {
         Rectangle frameRegion = clipPanel.toClipCoords(new Rectangle(region));
         if (origData == null || !origData.isSameRegion(frameRegion)) {
             origData = new ClipDataEdit(clip, frameRegion);
-            clip.beginEdit(frameRegion, "Scale Region");
+//            clip.beginEdit(frameRegion, "Scale Region");
         }
+        clip.beginEdit(frameRegion, "Scale Region");
         double[][] orig = origData.getOldData();
         for (int i = frameRegion.x; i < frameRegion.x + frameRegion.width; i++) {
             Frame frame = clip.getFrame(i);
@@ -126,7 +134,8 @@ public class RegionScaleTool implements Tool {
                 frame.setReal(j, orig[i - frameRegion.x][j - frameRegion.y] * amount);
             }
         }
-        clip.regionChanged(frameRegion);
+//        clip.regionChanged(frameRegion);
+        clip.endEdit();
     }
     
 }
