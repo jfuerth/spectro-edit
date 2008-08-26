@@ -33,6 +33,7 @@ import javax.swing.event.ChangeListener;
 import net.bluecow.spectro.Clip;
 import net.bluecow.spectro.ClipPanel;
 import net.bluecow.spectro.Frame;
+import net.bluecow.spectro.SpectroEditSession;
 
 /**
  * Tool for painting out a region of the spectral data based on mouse
@@ -65,8 +66,8 @@ public class PaintbrushTool implements Tool {
         brushSlider.setValue(5);
     }
     
-    public void activate(ClipPanel cp) {
-        clipPanel = cp;
+    public void activate(SpectroEditSession session) {
+        clipPanel = session.getClipPanel();
         clip = clipPanel.getClip();
         clipPanel.setRegionMode(false);
         clipPanel.addMouseListener(mouseHandler);

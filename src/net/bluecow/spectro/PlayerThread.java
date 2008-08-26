@@ -95,11 +95,11 @@ public class PlayerThread extends Thread {
                     }
                     try {
                         Object[] args = { playing };
-                        logger.fine(String.format("Player thread sleeping for 10 seconds. playing=%b\n", args));
+                        logger.finest(String.format("Player thread sleeping for 10 seconds. playing=%b\n", args));
                         sleep(10000);
                     } catch (InterruptedException ex) {
                         Object[] args = {};
-                        logger.fine(String.format("Player thread interrupted in sleep\n", args));
+                        logger.finest(String.format("Player thread interrupted in sleep\n", args));
                     }
                 }
             }

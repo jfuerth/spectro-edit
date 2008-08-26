@@ -19,6 +19,7 @@ package net.bluecow.spectro.tool;
 import javax.swing.JComponent;
 
 import net.bluecow.spectro.ClipPanel;
+import net.bluecow.spectro.SpectroEditSession;
 
 /**
  * Defines all the things every tool can do.
@@ -33,7 +34,7 @@ public interface Tool {
     /**
      * Makes this tool respond to user input activity on the given clip panel.
      */
-    void activate(ClipPanel cp);
+    void activate(SpectroEditSession session);
     
     /**
      * Makes this tool stop responding to user activity on the clip panel it was

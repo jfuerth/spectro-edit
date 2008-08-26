@@ -54,4 +54,9 @@ public class ClipDataChangeEvent {
     public Rectangle getRegion() {
         return new Rectangle(region);
     }
+    
+    @Override
+    public String toString() {
+        return "Clip Data Change @ " + region;
+    }
 }

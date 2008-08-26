@@ -31,7 +31,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
-import javax.swing.undo.UndoManager;
 
 import net.bluecow.spectro.action.PlayPauseAction;
 import net.bluecow.spectro.action.RewindAction;
@@ -48,10 +47,12 @@ public class SpectroEditSession {
     private final UndoManager undoManager = new UndoManager();
 
     private final PlayerThread playerThread;
+
+    private final ClipPanel clipPanel;
     
     protected SpectroEditSession(Clip c) throws LineUnavailableException {
-        ClipPanel cp = ClipPanel.newInstance(c);
-        cp.addUndoableEditListener(undoManager);
+        clipPanel = ClipPanel.newInstance(c);
+        clipPanel.addUndoableEditListener(undoManager);
         
         playerThread = new PlayerThread(c);
         playerThread.start();
@@ -59,8 +60,8 @@ public class SpectroEditSession {
         final JFrame f = new JFrame("Spectro-Edit " + Version.VERSION);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setLayout(new BorderLayout());
-        f.add(new JScrollPane(cp), BorderLayout.CENTER);
-        f.add(new ToolboxPanel(cp).getPanel(), BorderLayout.SOUTH);
+        f.add(new JScrollPane(clipPanel), BorderLayout.CENTER);
+        f.add(new ToolboxPanel(this).getPanel(), BorderLayout.SOUTH);
 
         JToolBar toolbar = new JToolBar();
         toolbar.add(new SaveAction(c, f));
@@ -123,4 +124,11 @@ public class SpectroEditSession {
         undoManager.redo();
     }
 
+    public ClipPanel getClipPanel() {
+        return clipPanel;
+    }
+    
+    public UndoManager getUndoManager() {
+        return undoManager;
+    }
 }

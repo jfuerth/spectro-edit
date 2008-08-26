@@ -17,10 +17,13 @@
 package net.bluecow.spectro;
 
 import java.awt.Rectangle;
+import java.util.Arrays;
+import java.util.logging.Logger;
 
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoableEdit;
 
 /**
  * Captures the necessary state and behaviour to undo and redo some change
@@ -28,10 +31,12 @@ import javax.swing.undo.CannotUndoException;
  */
 public class ClipDataEdit extends AbstractUndoableEdit {
 
+    private static final Logger logger = Logger.getLogger(ClipDataEdit.class.getName());
+    
     private final Clip clip;
     private final int firstFrame;
     private final int firstFreqIndex;
-    private final double[][] oldData;
+    private double[][] oldData;
     private double[][] newData;
     
     /**
@@ -71,6 +76,26 @@ public class ClipDataEdit extends AbstractUndoableEdit {
         this(clip, r.x, r.y, r.width, r.height);
     }
 
+    @Override
+    public boolean replaceEdit(UndoableEdit anEdit) {
+        boolean replace = false;
+        if (anEdit instanceof ClipDataEdit) {
+            ClipDataEdit other = (ClipDataEdit) anEdit;
+            if (
+                other.firstFrame == firstFrame &&
+                other.firstFreqIndex == firstFreqIndex &&
+                other.oldData.length == oldData.length &&
+                other.oldData[0].length == oldData[0].length &&
+                other.clip == clip) {
+                replace = true;
+                oldData = other.oldData;
+                other.die();
+            }
+        }
+        logger.fine("Replace edit? " + replace);
+        return replace;
+    }
+    
     /**
      * Copies the current contents of the same clip region that was captured
      * during the constructor invocation. This will be the REDO data.
@@ -81,11 +106,16 @@ public class ClipDataEdit extends AbstractUndoableEdit {
         }
         newData = new double[oldData.length][oldData[0].length];
         capture(newData);
+        if (Arrays.deepEquals(oldData, newData)) {
+            logger.info("Captured new data == old data!");
+            new Exception().printStackTrace();
+        }
     }
     
     @Override
     public void undo() throws CannotUndoException {
         super.undo();
+        logger.fine("Undoing edit at " + getRegion());
         apply(oldData);
         clip.regionChanged(getRegion());
     }
@@ -93,6 +123,7 @@ public class ClipDataEdit extends AbstractUndoableEdit {
     @Override
     public void redo() throws CannotRedoException {
         super.redo();
+        logger.fine("Redoing edit at " + getRegion());
         apply(newData);
         clip.regionChanged(getRegion());
     }
@@ -158,5 +189,12 @@ public class ClipDataEdit extends AbstractUndoableEdit {
      */
     public double[][] getOldData() {
         return oldData;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format(
+                "Clip Data Edit @ [%d, %d %d x %d]",
+                firstFrame, firstFreqIndex, oldData.length, oldData[0].length);
     }
 }
