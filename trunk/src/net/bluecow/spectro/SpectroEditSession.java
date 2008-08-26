@@ -61,7 +61,7 @@ public class SpectroEditSession {
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setLayout(new BorderLayout());
         f.add(new JScrollPane(clipPanel), BorderLayout.CENTER);
-        f.add(new ToolboxPanel(this).getPanel(), BorderLayout.SOUTH);
+        f.add(new ToolboxPanel(this).getPanel(), BorderLayout.WEST);
 
         JToolBar toolbar = new JToolBar();
         toolbar.add(new SaveAction(c, f));
