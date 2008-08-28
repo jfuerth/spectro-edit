@@ -16,17 +16,15 @@
  */
 package net.bluecow.spectro.tool;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
+import javax.swing.Box;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -47,7 +45,7 @@ public class PaintbrushTool implements Tool {
     private final PaintbrushMouseHandler mouseHandler = new PaintbrushMouseHandler();
     
     // settings panel stuff
-    private final JPanel settingsPanel;
+    private final Box settingsPanel;
     private final JSlider brushSlider;
     private final JLabel brushSizeLabel;
     
@@ -56,15 +54,21 @@ public class PaintbrushTool implements Tool {
      * activate it with {@link #activate(ClipPanel)}.
      */
     public PaintbrushTool() {
-        settingsPanel = new JPanel(new BorderLayout());
-        settingsPanel.add(brushSizeLabel = new JLabel(), BorderLayout.NORTH);
-        settingsPanel.add(brushSlider = new JSlider(1, 20, 1), BorderLayout.CENTER);
+        settingsPanel = Box.createVerticalBox();
+        settingsPanel.add(brushSizeLabel = new JLabel());
+        settingsPanel.add(brushSlider = new JSlider(1, 20, 1));
+        settingsPanel.add(Box.createGlue());
+        
         brushSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 brushSizeLabel.setText("Paintbrush size: " + brushSlider.getValue());
             }
         });
         brushSlider.setValue(5);
+    }
+    
+    public String getName() {
+        return "Paintbrush";
     }
     
     public void activate(SpectroEditSession session) {

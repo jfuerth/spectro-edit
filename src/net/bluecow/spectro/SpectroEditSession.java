@@ -29,6 +29,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
@@ -60,8 +61,11 @@ public class SpectroEditSession {
         final JFrame f = new JFrame("Spectro-Edit " + Version.VERSION);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setLayout(new BorderLayout());
-        f.add(new JScrollPane(clipPanel), BorderLayout.CENTER);
-        f.add(new ToolboxPanel(this).getPanel(), BorderLayout.WEST);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setTopComponent(new ToolboxPanel(this).getPanel());
+        splitPane.setBottomComponent(new JScrollPane(clipPanel));
+        f.add(splitPane, BorderLayout.CENTER);
 
         JToolBar toolbar = new JToolBar();
         toolbar.add(new SaveAction(c, f));

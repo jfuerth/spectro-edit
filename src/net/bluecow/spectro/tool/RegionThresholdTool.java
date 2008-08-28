@@ -17,10 +17,13 @@
 package net.bluecow.spectro.tool;
 
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.Box;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JSlider;
@@ -33,7 +36,13 @@ import net.bluecow.spectro.ClipPanel;
 import net.bluecow.spectro.Frame;
 import net.bluecow.spectro.SpectroEditSession;
 
-public class RegionScaleTool implements Tool {
+/**
+ * Tool that sets any data point that was over a threshold amount to 0,
+ * leaving all other data points at their original values. This is a
+ * nice way to remove some sound that is significantly louder than the
+ * background noise, leaving only what was in the background.
+ */
+public class RegionThresholdTool implements Tool {
 
     private ClipPanel clipPanel;
     private Clip clip;
@@ -42,11 +51,7 @@ public class RegionScaleTool implements Tool {
 
         public void propertyChange(PropertyChangeEvent evt) {
             if ("region".equals(evt.getPropertyName())) {
-//                if (origData != null) {
-//                    clip.endEdit();
-//                    origData = null;
-//                }
-                scaleSlider.setValue(initialScale);
+                thresholdSlider.setValue(initialThreshold);
             }
         }
         
@@ -62,31 +67,48 @@ public class RegionScaleTool implements Tool {
     private ClipDataEdit origData;
     
     private final Box settingsPanel;
-    private final JSlider scaleSlider;
-    private final int initialScale = 100;
-    
-    public RegionScaleTool() {
-        settingsPanel = Box.createVerticalBox();
-        settingsPanel.add(new JLabel("Scale amount"));
+    private final JSlider thresholdSlider;
+    private final int initialThreshold = 100;
 
-        scaleSlider = new JSlider(0, 500, 100);
-        scaleSlider.addChangeListener(new ChangeListener() {
+    /**
+     * If checked, this tool imposes an upper threshold (removes loud parts); if
+     * false it is a lower threshold (removes quiet parts).
+     */
+    private final JCheckBox upper;
+
+
+    
+    public RegionThresholdTool() {
+        settingsPanel = Box.createVerticalBox();
+        settingsPanel.add(new JLabel("Cutoff Threshold"));
+
+        thresholdSlider = new JSlider(0, 500, 100);
+        thresholdSlider.addChangeListener(new ChangeListener() {
 
             public void stateChanged(ChangeEvent e) {
-                if (scaleSlider.getValueIsAdjusting()) {
-                    scaleRegion(scaleSlider.getValue() / 100.0);
+                if (thresholdSlider.getValueIsAdjusting()) {
+                    applyRegionThreshold(thresholdSlider.getValue() / 100.0);
                 }
                 // TODO fire undo event for slider position
             }
-            
+
         });
-        settingsPanel.add(scaleSlider);
+        settingsPanel.add(thresholdSlider);
+        
+        upper = new JCheckBox("Upper Threshold");
+        upper.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // just re-apply.. the method is sensitive to the state of the checkbox
+                applyRegionThreshold(thresholdSlider.getValue() / 100.0);
+            }
+        });
+        settingsPanel.add(upper);
         
         settingsPanel.add(Box.createGlue());
     }
 
     public String getName() {
-        return "Scale Region";
+        return "Region Threshold";
     }
     
     public void activate(SpectroEditSession session) {
@@ -97,10 +119,7 @@ public class RegionScaleTool implements Tool {
     }
 
     public void deactivate() {
-        if (origData != null) {
-//            clip.endEdit();
-            origData = null;
-        }
+        origData = null;
         clipPanel.removePropertyChangeListener("region", clipEventHandler);
         clip = null;
         clipPanel = null;
@@ -110,17 +129,8 @@ public class RegionScaleTool implements Tool {
         return settingsPanel;
     }
 
-    @Override
-    public String toString() {
-        return "Region";
-    }
-    
-    /**
-     * Scales the actual clip data in the given region by the amount given. 1.0 means
-     * no change; between 0.0 and 1.0 means to reduce volume, and &gt;1.0 means
-     * to increase volume.
-     */
-    public void scaleRegion(double amount) {
+
+    private void applyRegionThreshold(double threshold) {
         Rectangle region = clipPanel.getRegion();
         if (region == null || region.width == 0 || region.height == 0) {
             origData = null;
@@ -129,17 +139,22 @@ public class RegionScaleTool implements Tool {
         Rectangle frameRegion = clipPanel.toClipCoords(new Rectangle(region));
         if (origData == null || !origData.isSameRegion(frameRegion)) {
             origData = new ClipDataEdit(clip, frameRegion);
-//            clip.beginEdit(frameRegion, "Scale Region");
         }
-        clip.beginEdit(frameRegion, "Scale Region");
+        clip.beginEdit(frameRegion, "Region Threshold");
         double[][] orig = origData.getOldData();
         for (int i = frameRegion.x; i < frameRegion.x + frameRegion.width; i++) {
             Frame frame = clip.getFrame(i);
             for (int j = frameRegion.y; j < frameRegion.y + frameRegion.height; j++) {
-                frame.setReal(j, orig[i - frameRegion.x][j - frameRegion.y] * amount);
+                double origVal = orig[i - frameRegion.x][j - frameRegion.y];
+                if (upper.isSelected() && Math.abs(origVal) > threshold) {
+                    frame.setReal(j, 0.0);
+                } else if ( (!upper.isSelected()) && Math.abs(origVal) < threshold) {
+                    frame.setReal(j, 0.0);
+                } else {
+                    frame.setReal(j, origVal);
+                }
             }
         }
-//        clip.regionChanged(frameRegion);
         clip.endEdit();
     }
     

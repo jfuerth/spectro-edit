@@ -1,14 +1,12 @@
 Not yet done:
 
+-Continuous readout at mouse position: frequency (y axis) and time (x axis). frequency could show hz as well as nearest musical note.
 -better user interface for choosing a tool and changing its properties
  -paint tool: brush shape/size
- -region tools:
-  -zero out data over a threshold
-  -scale data up or down
-  -zero data under a threshold
   -flip data upside down
   -copy/paste with option of logarithmic or linear
 -(internal) make an undo manager that fires events after undo and redo so the actions can change state
+-(internal) refactor the region tools once there are enough of them to know what's common and what's special
 -(internal) API fix: it should be a secret that the clip data is painted upside down.
  practical upshot: remove the ClipPanel.toClipCoords() method, and everything
                    should still work the same.
@@ -20,7 +18,6 @@ Not yet done:
 -file menu with open and close; multiple projects open at same time
 -edit menu with image and audio copy and paste
 -ability to play just the selected (time) region; optional looping
--Continuous readout at mouse position: frequency (y axis) and time (x axis). frequency could show hz as well as nearest musical note.
 -Component for drawing an alpha curve (straight multiplier isn't good enough)
 -top-level exception catcher (including uncaught swing exceptions)
 -Paintbrush shape/size selector (maybe use greyscale PNGs to describe paintbrushes)
@@ -31,7 +28,6 @@ Not yet done:
 -import and export 16-bit greyscale images
 
 Release 0.3:
--Region tool
 -Undo/redo for modifications (painting and regions)
 -(internal) Moved region features into ClipPanel so it's easier to make new region tools
 -now the window is never wider than the screen when opening a new clip
@@ -42,6 +38,10 @@ Release 0.3:
 -(internal)undo logic in scale region tool now works when undoing while an edit is in progress
  -this was done by implementing replaceEdit() and firing a new undoable edit for every step of the slider
 -(internal) clip panel now fires undo events when region changes
+-Improved user interface for choosing tools and interacting with them
+-Implemented new tools that operate on a selected rectangular region:
+  -zero out data over/under a threshold
+  -scale data up or down
 
 Release 0.2: August 9, 2008
 Fixes to save dialog:
