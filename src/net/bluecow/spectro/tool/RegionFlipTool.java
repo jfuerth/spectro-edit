@@ -93,9 +93,11 @@ public class RegionFlipTool implements Tool {
         for (int i = 0; i < frameRegion.width; i++) {
             Frame frame = clip.getFrame(frameRegion.x + i);
             for (int j = 0; j < frameRegion.height / 2; j++) {
-                double tmp = frame.getReal(frameRegion.y + frameRegion.height - j);
-                frame.setReal(frameRegion.y + frameRegion.height - j, frame.getReal(frameRegion.y + j));
-                frame.setReal(frameRegion.y + j, tmp);
+                int bottom = frameRegion.y + frameRegion.height - 1 - j;
+                int top = frameRegion.y + j;
+                double tmp = frame.getReal(bottom);
+                frame.setReal(bottom, frame.getReal(top));
+                frame.setReal(top, tmp);
             }
         }
         clip.endEdit();
@@ -110,7 +112,7 @@ public class RegionFlipTool implements Tool {
         clip.beginEdit(frameRegion, "Flip Region Horizontally");
         for (int i = 0; i < frameRegion.width / 2; i++) {
             Frame lframe = clip.getFrame(frameRegion.x + i);
-            Frame rframe = clip.getFrame(frameRegion.x + frameRegion.width - i);
+            Frame rframe = clip.getFrame(frameRegion.x + frameRegion.width - 1 - i);
             for (int j = frameRegion.y; j < frameRegion.y + frameRegion.height; j++) {
                 double tmp = rframe.getReal(j);
                 rframe.setReal(j, lframe.getReal(j));

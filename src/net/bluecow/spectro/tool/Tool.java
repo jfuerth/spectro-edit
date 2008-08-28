@@ -18,7 +18,6 @@ package net.bluecow.spectro.tool;
 
 import javax.swing.JComponent;
 
-import net.bluecow.spectro.ClipPanel;
 import net.bluecow.spectro.SpectroEditSession;
 
 /**
