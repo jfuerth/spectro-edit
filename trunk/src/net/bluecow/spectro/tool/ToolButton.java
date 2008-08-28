@@ -16,6 +16,8 @@
  */
 package net.bluecow.spectro.tool;
 
+import java.awt.Color;
+import java.awt.Graphics;
 import java.net.URL;
 
 import javax.swing.ButtonGroup;
@@ -50,5 +52,16 @@ public class ToolButton extends JRadioButton {
     public Tool getTool() {
         return tool;
     }
-    
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        if (isSelected()) {
+            g.setColor(Color.RED);
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
+        getIcon().paintIcon(
+                this, g,
+                getWidth() / 2 - getIcon().getIconWidth() / 2,
+                getHeight() / 2 - getIcon().getIconHeight() / 2);
+    }
 }

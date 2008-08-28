@@ -32,6 +32,11 @@ public interface Tool {
     JComponent getSettingsPanel();
     
     /**
+     * Returns the name of this tool as it should be shown to the user.
+     */
+    String getName();
+    
+    /**
      * Makes this tool respond to user input activity on the given clip panel.
      */
     void activate(SpectroEditSession session);
