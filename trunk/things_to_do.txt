@@ -1,11 +1,12 @@
 Not yet done:
 
--Continuous readout at mouse position: frequency (y axis) and time (x axis). frequency could show hz as well as nearest musical note.
+-show hz as well as nearest musical note in position readout
+-logarithmic sliders
+-logarithmic display
+-(internal) make the undo manager that fire events after undo and redo so the actions can change state
 -better user interface for choosing a tool and changing its properties
- -paint tool: brush shape/size
-  -flip data upside down
-  -copy/paste with option of logarithmic or linear
--(internal) make an undo manager that fires events after undo and redo so the actions can change state
+ -paint tool brush shape (based on greyscale bitmaps)
+ -copy/paste with option of logarithmic or linear
 -(internal) refactor the region tools once there are enough of them to know what's common and what's special
 -(internal) API fix: it should be a secret that the clip data is painted upside down.
  practical upshot: remove the ClipPanel.toClipCoords() method, and everything
@@ -42,6 +43,9 @@ Release 0.3:
 -Implemented new tools that operate on a selected rectangular region:
   -zero out data over/under a threshold
   -scale data up or down
+  -flip data upside down or backwards
+-(internal) fixed off-by-1 error in flip
+-Continuous readout reporting mouse position: frequency (y axis) and time (x axis). 
 
 Release 0.2: August 9, 2008
 Fixes to save dialog:

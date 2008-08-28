@@ -35,6 +35,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import net.bluecow.spectro.ClipPanel;
+import net.bluecow.spectro.PositionReadout;
 import net.bluecow.spectro.SpectroEditSession;
 
 public class ToolboxPanel {
@@ -77,6 +78,7 @@ public class ToolboxPanel {
         viewSettingsPanel.setBackground(Color.WHITE);
         viewSettingsPanel.setBorder(new TitleBorder("View Settings"));
         viewSettingsPanel.add(makeBrightnessSlider());
+        viewSettingsPanel.add(new PositionReadout(clipPanel).getLabel());
         
         toolSettingsPanel = new JPanel(new BorderLayout());
         toolSettingsPanel.setBackground(Color.WHITE);
@@ -106,7 +108,7 @@ public class ToolboxPanel {
         toolButtonPanel.add(paintbrushToolButton);
         paintbrushToolButton.addActionListener(actionHandler);
 
-        JRadioButton regionScaleToolButton = new ToolButton(new RegionScaleTool(), "page_white_put", toolButtonGroup); // TODO better icon
+        JRadioButton regionScaleToolButton = new ToolButton(new RegionScaleTool(), "contrast_change", toolButtonGroup); // TODO better icon
         toolButtonPanel.add(regionScaleToolButton);
         regionScaleToolButton.addActionListener(actionHandler);
 
@@ -114,7 +116,7 @@ public class ToolboxPanel {
         toolButtonPanel.add(regionThresholdToolButton);
         regionThresholdToolButton.addActionListener(actionHandler);
 
-        JRadioButton flipToolButton = new ToolButton(new RegionFlipTool(), "page_white_put", toolButtonGroup); // TODO better icon
+        JRadioButton flipToolButton = new ToolButton(new RegionFlipTool(), "shape_flip_vertical", toolButtonGroup); // TODO better icon
         toolButtonPanel.add(flipToolButton);
         flipToolButton.addActionListener(actionHandler);
 

@@ -336,6 +336,10 @@ public class Clip {
     public void removeUndoableEditListener(UndoableEditListener l) {
         undoEventSupport.removeUndoableEditListener(l);
     }
+
+    public double getSamplingRate() {
+        return AUDIO_FORMAT.getSampleRate();
+    }
     
     
     
