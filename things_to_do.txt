@@ -30,7 +30,7 @@ Not yet done:
 -indicator of current playback position during playback and while paused 
 -import and export 16-bit greyscale images
 
-Release 0.3:
+Release 0.3: August 28, 2008
 -Undo/redo for modifications (painting and regions)
 -(internal) Moved region features into ClipPanel so it's easier to make new region tools
 -now the window is never wider than the screen when opening a new clip

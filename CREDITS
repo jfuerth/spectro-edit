@@ -1,0 +1,24 @@
+Spectro-Edit is the original work of Jonathan Fuerth
+(fuerth -at- bluecow -dot- net). Spectro-Edit is Free Software,
+availabe under the terms of the GNU GPL version 3 or later. See the
+COPYING file for the full text of the GPL.
+
+Thanks to:
+
+Thanks to Sun Microsystems for Java 5! Spectro-Edit is implemented
+entirely in the Java programming language. Programming in Java is
+better and more fun. So there. :P
+
+Thanks to Piotr Wendykier of Emory University for his JTransforms
+library, which Spectro-Edit uses for its fast and accurate DCT and
+IDCT routines. JTransforms is available under a MPL 1.1/GPL 2.0/
+LGPL 2.1 tri-license. Spectro-Edit uses it under the terms of LGPL
+2.1.
+
+Thanks also to Mark James for his Silk icon set. Spectro-Edit uses
+a mix of original and butchered (by me) icons from this set.
+The Silk icons are available under the Creative Commons Attribution
+License 2.5: http://creativecommons.org/licenses/by/2.5/
+
+You can obtain the Silk icon set from Mark's web site:
+http://www.famfamfam.com/lab/icons/silk/
