@@ -77,7 +77,7 @@ public class ToolboxPanel {
         viewSettingsPanel = new JPanel();
         viewSettingsPanel.setBackground(Color.WHITE);
         viewSettingsPanel.setBorder(new TitleBorder("View Settings"));
-        viewSettingsPanel.add(makeBrightnessSlider());
+        viewSettingsPanel.add(clipPanel.getColorizer().getSettingsPanel());
         viewSettingsPanel.add(new PositionReadout(clipPanel).getLabel());
         
         toolSettingsPanel = new JPanel(new BorderLayout());
@@ -131,19 +131,6 @@ public class ToolboxPanel {
         paintbrushToolButton.doClick();
     }
 
-    public JComponent makeBrightnessSlider() {
-        final JSlider brightness = new JSlider(0, 5000000, (int) (clipPanel.getSpectralToScreenMultiplier() * 100.0));
-        brightness.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
-                clipPanel.setSpectralToScreenMultiplier( ((double) brightness.getValue()) / 100.0 );
-            }
-        });
-        Box box = Box.createVerticalBox();
-        box.add(new JLabel("Brightness"));
-        box.add(brightness);
-        return box;
-    }
-    
     public JPanel getPanel() {
         return panel;
     }
