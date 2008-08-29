@@ -27,7 +27,10 @@
 	
 	<target name="jar" depends="compile" description="Creates an executable JAR of the application">
 		<mkdir dir="dist"/>
+		<mkdir dir="dist/META-INF"/>
 		<unjar src="lib/jtransforms-1.6.jar" dest="build"/>
+		<copy file="COPYING" todir="build/META-INF"/>
+		<copy file="CREDITS" todir="build/META-INF"/>
 		<jar destfile="dist/spectro-edit_${net.bluecow.spectro.VERSION}.jar"
 			 basedir="build"
 			 includes="**" manifest="etc/manifest"/>

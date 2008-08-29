@@ -16,10 +16,14 @@
  */
 package net.bluecow.spectro;
 
+import java.util.logging.Logger;
+
 import javax.swing.event.UndoableEditEvent;
 
 public class UndoManager extends javax.swing.undo.UndoManager {
 
+    private static final Logger logger = Logger.getLogger(UndoManager.class.getName());
+    
     public UndoManager() {
         super();
         setLimit(1000);
@@ -27,9 +31,9 @@ public class UndoManager extends javax.swing.undo.UndoManager {
     
     @Override
     public void undoableEditHappened(UndoableEditEvent e) {
-        System.out.println("Got undoable edit: " + e.getEdit());
+        logger.finest("Got undoable edit: " + e.getEdit());
         super.undoableEditHappened(e);
-        System.out.println("Added edit " + edits.size() + "/" + getLimit());
+        logger.fine("Added edit " + edits.size() + "/" + getLimit());
     }
 
 }
