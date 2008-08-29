@@ -1,8 +1,10 @@
 Not yet done:
 
--show hz as well as nearest musical note in position readout
--logarithmic sliders
 -logarithmic display
+ -find out what it means for the DCT to be normalized, and take advantage of it if it's useful
+-logarithmic sliders
+-show nearest musical note in position readout
+-memory monitoring (java.util.management)
 -(internal) make the undo manager that fire events after undo and redo so the actions can change state
 -better user interface for choosing a tool and changing its properties
  -paint tool brush shape (based on greyscale bitmaps)
@@ -46,6 +48,8 @@ Release 0.3:
   -flip data upside down or backwards
 -(internal) fixed off-by-1 error in flip
 -Continuous readout reporting mouse position: frequency (y axis) and time (x axis). 
+-huge performance improvement in clip->display updates (the brightness slider is now "like butter")
+-(internal) factored out an interface so it's easy to come up with different colorization strategies
 
 Release 0.2: August 9, 2008
 Fixes to save dialog:

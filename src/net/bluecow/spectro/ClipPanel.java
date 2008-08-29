@@ -27,6 +27,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.util.logging.Logger;
 
 import javax.swing.JPanel;
@@ -56,7 +57,10 @@ public class ClipPanel extends JPanel implements Scrollable {
 
     private final BufferedImage img;
     
-    private double spectralToScreenMultiplier = 6000.0;
+    /**
+     * The pixel data in {@link #img}.
+     */
+    private final int[] imgPixels;
     
     /**
      * A rectangular frame that some tools use as a bounding box for
@@ -83,6 +87,8 @@ public class ClipPanel extends JPanel implements Scrollable {
      */
     private boolean undoing;
     
+    private ValueColorizer colorizer = new GreyscaleLogColorizer(this);
+    
     private ClipDataChangeListener clipDataChangeHandler = new ClipDataChangeListener() {
 
         public void clipDataChanged(ClipDataChangeEvent e) {
@@ -105,6 +111,7 @@ public class ClipPanel extends JPanel implements Scrollable {
         this.clip = clip;
         setPreferredSize(new Dimension(clip.getFrameCount(), clip.getFrameFreqSamples()));
         img = new BufferedImage(clip.getFrameCount(), clip.getFrameFreqSamples(), BufferedImage.TYPE_INT_RGB);
+        imgPixels = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
         updateImage(null);
         setBackground(Color.BLACK);
     }
@@ -175,15 +182,24 @@ public class ClipPanel extends JPanel implements Scrollable {
         return toClipCoords(r);
     }
 
+    public ValueColorizer getColorizer() {
+        return colorizer;
+    }
+    
     /**
      * Updates the image based on the existing Clip data and the settings in
      * this panel (such as the multiplier).
+     * <p>
+     * It is not necessary to call this method directly unless you are a
+     * ValueColorizer and your settings have changed.  Image updates due to
+     * clip data change events are handled automatically.
+     * TODO have colorizers fire change events so this method can be private again
      * 
      * @param region
      *            The region to update, in screen co-ordinates. Null means to
      *            update the whole image.
      */
-    private void updateImage(Rectangle region) {
+    void updateImage(Rectangle region) {
         if (region == null) {
             region = new Rectangle(0, 0, clip.getFrameCount(), clip.getFrameFreqSamples());
         } else {
@@ -198,21 +214,9 @@ public class ClipPanel extends JPanel implements Scrollable {
         for (int col = region.x; col < endCol; col++) {
             Frame f = clip.getFrame(col);
             for (int row = region.y; row < endRow; row++) {
-                int greyVal = (int) (spectralToScreenMultiplier * Math.abs(f.getReal(row)));
-                if (greyVal < 0) {
-                    greyVal = 0;
-                } else if (greyVal > 255) {
-                    greyVal = 255;
-                }
-                greyVal = (greyVal << 16) | (greyVal << 8) | (greyVal);
-                img.setRGB(col, row, greyVal);
+                // the following is a MUCH faster equivalent to: img.setRGB(col, row, greyVal);
+                imgPixels[col + row * img.getWidth()] = colorizer.colorFor(f.getReal(row));
             }
-            
-            // this may or may not be faster...
-            // img.setRGB(0, col, 1, nrows, rgbArray, 0, 1);
-            
-            // it would definitely be faster to update the array directly
-            // (it can be retrieved from the image's WritableRaster)
         }
     }
 
@@ -250,16 +254,6 @@ public class ClipPanel extends JPanel implements Scrollable {
         }
     }
 
-    public void setSpectralToScreenMultiplier(double d) {
-        spectralToScreenMultiplier = d;
-        updateImage(null);
-        repaint();
-    }
-    
-    public double getSpectralToScreenMultiplier() {
-        return spectralToScreenMultiplier;
-    }
-    
     public Clip getClip() {
         return clip;
     }
