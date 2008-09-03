@@ -87,7 +87,7 @@ public class ClipPanel extends JPanel implements Scrollable {
      */
     private boolean undoing;
     
-    private ValueColorizer colorizer = new GreyscaleLogColorizer(this);
+    private ValueColorizer colorizer = new LogarithmicColorizer(this);
     
     private ClipDataChangeListener clipDataChangeHandler = new ClipDataChangeListener() {
 
@@ -200,6 +200,7 @@ public class ClipPanel extends JPanel implements Scrollable {
      *            update the whole image.
      */
     void updateImage(Rectangle region) {
+        if (clip == null) return;
         if (region == null) {
             region = new Rectangle(0, 0, clip.getFrameCount(), clip.getFrameFreqSamples());
         } else {

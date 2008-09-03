@@ -87,7 +87,7 @@ public class RegionThresholdTool implements Tool {
 
             public void stateChanged(ChangeEvent e) {
                 if (thresholdSlider.getValueIsAdjusting()) {
-                    applyRegionThreshold(thresholdSlider.getValue() / 100.0);
+                    applyRegionThreshold(Math.expm1(thresholdSlider.getValue() / 100.0));
                 }
                 // TODO fire undo event for slider position
             }
@@ -99,7 +99,7 @@ public class RegionThresholdTool implements Tool {
         upper.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 // just re-apply.. the method is sensitive to the state of the checkbox
-                applyRegionThreshold(thresholdSlider.getValue() / 100.0);
+                applyRegionThreshold(Math.expm1(thresholdSlider.getValue() / 100.0));
             }
         });
         settingsPanel.add(upper);
