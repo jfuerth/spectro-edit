@@ -1,8 +1,7 @@
 Not yet done:
 
--logarithmic display
- -find out what it means for the DCT to be normalized, and take advantage of it if it's useful
 -logarithmic sliders
+-fix play/pause button (clip has to fire an event when playback ends)
 -show nearest musical note in position readout
 -memory monitoring (java.util.management)
 -(internal) make the undo manager that fire events after undo and redo so the actions can change state
@@ -29,6 +28,13 @@ Not yet done:
 -Pause should be immediate (don't drain the output line; flush it) 
 -indicator of current playback position during playback and while paused 
 -import and export 16-bit greyscale images
+
+Release 0.4:
+
+-Improved colourization so it has more user control, and can optionally use an additional
+ colour (red) to double the displayed value resolution (now 16 bits instead of 8 bits).
+-Made view settings sliders exponential instead of linear. This greatly improves the
+ useful range, which used to be squished to the bottom
 
 Release 0.3: August 28, 2008
 -Undo/redo for modifications (painting and regions)

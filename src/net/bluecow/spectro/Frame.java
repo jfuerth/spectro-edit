@@ -17,6 +17,7 @@
 package net.bluecow.spectro;
 
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 import edu.emory.mathcs.jtransforms.dct.DoubleDCT_1D;
 
@@ -25,6 +26,8 @@ import edu.emory.mathcs.jtransforms.dct.DoubleDCT_1D;
  * frequency components of this frame are modifiable.
  */
 public class Frame {
+    
+    private static final Logger logger = Logger.getLogger(Frame.class.getName());
 
     /**
      * Array of spectral data.
@@ -48,11 +51,17 @@ public class Frame {
         // in place transform: timeData becomes frequency data
         dct.forward(timeData, true);
 
+        double min = Double.POSITIVE_INFINITY;
+        double max = Double.NEGATIVE_INFINITY;
+        
         data = new double[timeData.length];
         for (int i = 0; i < data.length; i++) {
             data[i] = timeData[i];
+            min = Math.min(data[i], min);
+            max = Math.max(data[i], max);
         }
         
+        logger.finer(String.format("Computed frame. min=%4.6f max=%4.6f", min, max));
     }
     
     /**
