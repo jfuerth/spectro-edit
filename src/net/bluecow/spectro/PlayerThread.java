@@ -17,6 +17,8 @@
 package net.bluecow.spectro;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.sound.sampled.AudioFormat;
@@ -24,6 +26,8 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class PlayerThread extends Thread {
     
@@ -71,6 +75,10 @@ public class PlayerThread extends Thread {
             byte[] buf = new byte[outputLine.getBufferSize()];
 
             while (!terminated) {
+                
+                // playback starting
+                fireStateChanged();
+                
                 while (playing) {
                     int readSize = outputLine.available();
                     int len = in.read(buf, 0, readSize);
@@ -78,13 +86,16 @@ public class PlayerThread extends Thread {
                         logger.fine(String.format("Didn't read full %d bytes (got %d)\n", readSize, len));
                     }
                     if (len == -1) {
+                        // playback has completed due to EOF on audio stream
                         setPlaybackPosition(0);
-                        // TODO need to notify client code that playback has completed
                         playing = false;
                     } else {
                         outputLine.write(buf, 0, len);
                     }
                 }
+
+                // playback ended or paused
+                fireStateChanged();
 
                 outputLine.drain();
 
@@ -126,6 +137,10 @@ public class PlayerThread extends Thread {
         interrupt();
     }
     
+    public synchronized boolean isPlaying() {
+        return playing;
+    }
+    
     /**
      * Halts playback and permanently stops this thread.
      */
@@ -154,5 +169,33 @@ public class PlayerThread extends Thread {
             }
         }
         in = clip.getAudio();
+    }
+    
+    private final List<ChangeListener> changeListeners = new ArrayList<ChangeListener>();
+
+    /**
+     * Adds a listener so it will be notified whenever this player's playback
+     * state changes. Change events will happen either as a result of method
+     * calls on this player ({@link #startPlaying()}, {@link #stopPlaying()},
+     * and so on) or by "natural causes" such as the end of the audio stream
+     * being reached.
+     * <p>
+     * The notifications will always be delivered on the player's own thread,
+     * so change listeners must take care that their stateChanged() method
+     * is thread safe.
+     */
+    public void addChangeListener(ChangeListener l) {
+        changeListeners.add(l);
+    }
+    
+    public void removeChangeListener(ChangeListener l) {
+        changeListeners.remove(l);
+    }
+    
+    private void fireStateChanged() {
+        ChangeEvent e = new ChangeEvent(this);
+        for (int i = changeListeners.size() - 1; i >= 0; i--) {
+            changeListeners.get(i).stateChanged(e);
+        }
     }
 }

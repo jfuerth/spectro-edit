@@ -1,10 +1,13 @@
 Not yet done:
 
--logarithmic sliders
--fix play/pause button (clip has to fire an event when playback ends)
+-Pause should be immediate (don't drain the output line; flush it) 
+-(internal) make the undo manager fire events after undo and redo so the actions can change state
+-indicator of current playback position during playback and while paused 
 -show nearest musical note in position readout
 -memory monitoring (java.util.management)
--(internal) make the undo manager that fire events after undo and redo so the actions can change state
+-do better with lengthy samples (song length)
+ -store all the frame data in a buffered image in the first place? --this is probably easiest
+ -OR only render the visible portion into a buffered image? (perhaps by implementing a special viewport)
 -better user interface for choosing a tool and changing its properties
  -paint tool brush shape (based on greyscale bitmaps)
  -copy/paste with option of logarithmic or linear
@@ -17,16 +20,12 @@ Not yet done:
  best fix: figure out how to compute the DCT that way in the first place
  compromise: hide the array in Frame, and have the access methods translate the
              y value.
+-a "find harmonics" tool that would search for overtones by shape similarity
 -file menu with open and close; multiple projects open at same time
 -edit menu with image and audio copy and paste
 -ability to play just the selected (time) region; optional looping
--Component for drawing an alpha curve (straight multiplier isn't good enough)
 -top-level exception catcher (including uncaught swing exceptions)
--Paintbrush shape/size selector (maybe use greyscale PNGs to describe paintbrushes)
--Paint to an alpha channel instead of directly modifying frames?
- -if so, take the alpha channel into account during playback
--Pause should be immediate (don't drain the output line; flush it) 
--indicator of current playback position during playback and while paused 
+-Do modifications as a stack of layers rather than modifying the data directly
 -import and export 16-bit greyscale images
 
 Release 0.4:
@@ -35,6 +34,9 @@ Release 0.4:
  colour (red) to double the displayed value resolution (now 16 bits instead of 8 bits).
 -Made view settings sliders exponential instead of linear. This greatly improves the
  useful range, which used to be squished to the bottom
+-(internal) new JSlider subclass that makes it easy to create a slider with a configurable
+ curve and known min and max values
+-fixed play/pause button so it reverts to "Play" again when playback is finished
 
 Release 0.3: August 28, 2008
 -Undo/redo for modifications (painting and regions)
