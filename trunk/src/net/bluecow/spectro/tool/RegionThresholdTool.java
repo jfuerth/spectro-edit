@@ -26,7 +26,6 @@ import javax.swing.Box;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -67,7 +66,7 @@ public class RegionThresholdTool implements Tool {
     private ClipDataEdit origData;
     
     private final Box settingsPanel;
-    private final JSlider thresholdSlider;
+    private final CurvedSlider thresholdSlider;
     private final int initialThreshold = 100;
 
     /**
@@ -82,12 +81,12 @@ public class RegionThresholdTool implements Tool {
         settingsPanel = Box.createVerticalBox();
         settingsPanel.add(new JLabel("Cutoff Threshold"));
 
-        thresholdSlider = new JSlider(0, 500, 100);
+        thresholdSlider = new CurvedSlider(0.0, 10.0, 3);
         thresholdSlider.addChangeListener(new ChangeListener() {
 
             public void stateChanged(ChangeEvent e) {
                 if (thresholdSlider.getValueIsAdjusting()) {
-                    applyRegionThreshold(Math.expm1(thresholdSlider.getValue() / 100.0));
+                    applyRegionThreshold(thresholdSlider.getCurvedValue());
                 }
                 // TODO fire undo event for slider position
             }
@@ -99,7 +98,7 @@ public class RegionThresholdTool implements Tool {
         upper.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 // just re-apply.. the method is sensitive to the state of the checkbox
-                applyRegionThreshold(Math.expm1(thresholdSlider.getValue() / 100.0));
+                applyRegionThreshold(thresholdSlider.getCurvedValue());
             }
         });
         settingsPanel.add(upper);

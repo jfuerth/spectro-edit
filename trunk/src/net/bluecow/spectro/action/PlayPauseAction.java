@@ -19,25 +19,41 @@ package net.bluecow.spectro.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import net.bluecow.spectro.PlayerThread;
 
 public class PlayPauseAction extends AbstractAction {
 
     private final PlayerThread playerThread;
+    
+    private final ChangeListener playerStateHandler = new ChangeListener() {
+        public void stateChanged(ChangeEvent e) {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    if (playerThread.isPlaying()) {
+                        putValue(NAME, "Pause");
+                    } else {
+                        putValue(NAME, "Play");
+                    }
+                };
+            });
+        }
+    };
 
     public PlayPauseAction(PlayerThread playerThread) {
         super("Play");
         this.playerThread = playerThread;
+        playerThread.addChangeListener(playerStateHandler);
     }
 
     public void actionPerformed(ActionEvent e) {
-        if ("Play".equals(getValue(NAME))) {
-            playerThread.startPlaying();
-            putValue(NAME, "Pause");
-        } else if ("Pause".equals(getValue(NAME))) {
+        if (playerThread.isPlaying()) {
             playerThread.stopPlaying();
-            putValue(NAME, "Play");
+        } else {
+            playerThread.startPlaying();
         }
     }
 }

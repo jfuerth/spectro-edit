@@ -27,6 +27,8 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import net.bluecow.spectro.tool.CurvedSlider;
+
 public class LogarithmicColorizer implements ValueColorizer {
 
     private double preMult = 0;
@@ -41,24 +43,24 @@ public class LogarithmicColorizer implements ValueColorizer {
     LogarithmicColorizer(ClipPanel clipPanel) {
         this.clipPanel = clipPanel;
         
-        final JSlider preMultSlider = new JSlider(0, 7000000, 0);
+        final CurvedSlider preMultSlider = new CurvedSlider(0.0, 7000.0, 4.0);
         preMultSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
-                setPreMult( Math.expm1(preMultSlider.getValue() / 1000000.0 ) );
+                setPreMult(preMultSlider.getCurvedValue());
             }
         });
 
-        final JSlider brightnessSlider = new JSlider(0, 7000000, 0);
+        final JSlider brightnessSlider = new JSlider(-300, 300, 0);
         brightnessSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
-                setBrightness( Math.expm1(brightnessSlider.getValue() / 1000000.0 ) );
+                setBrightness(brightnessSlider.getValue());
             }
         });
 
-        final JSlider contrastSlider = new JSlider(0, 7000000, 0);
+        final CurvedSlider contrastSlider = new CurvedSlider(0.0, 10000.0, 4.0);
         contrastSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
-                setContrast( Math.expm1(contrastSlider.getValue() / 500000.0 ) );
+                setContrast(contrastSlider.getCurvedValue());
             }
         });
 
@@ -78,9 +80,9 @@ public class LogarithmicColorizer implements ValueColorizer {
         settingsPanel.add(contrastSlider);
         settingsPanel.add(useRedCheckbox);
         
-        preMultSlider.setValue(3000000);
+        preMultSlider.setValue(20);
         brightnessSlider.setValue(0);
-        contrastSlider.setValue(3000000);
+        contrastSlider.setValue(50);
     }
 
     public int colorFor(double val) {
@@ -106,19 +108,22 @@ public class LogarithmicColorizer implements ValueColorizer {
     }
 
     public void setPreMult(double multiplier) {
+        System.out.println("multiplier: " + multiplier);
         this.preMult = multiplier;
         clipPanel.updateImage(null);
         clipPanel.repaint();
     }
 
-    public void setBrightness(double multiplier) {
-        this.brightness = multiplier;
+    public void setBrightness(double brightness) {
+        System.out.println("brightness: " + brightness);
+        this.brightness = brightness;
         clipPanel.updateImage(null);
         clipPanel.repaint();
     }
 
-    public void setContrast(double multiplier) {
-        this.contrast = multiplier;
+    public void setContrast(double contrast) {
+        System.out.println("contrast: " + contrast);
+        this.contrast = contrast;
         clipPanel.updateImage(null);
         clipPanel.repaint();
     }
