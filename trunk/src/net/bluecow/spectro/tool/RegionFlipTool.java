@@ -46,6 +46,7 @@ public class RegionFlipTool implements Tool {
         settingsPanel = Box.createVerticalBox();
 
         vflipButton = new JButton("Flip vertically");
+        vflipButton.setOpaque(false);
         settingsPanel.add(vflipButton);
         vflipButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -54,6 +55,7 @@ public class RegionFlipTool implements Tool {
         });
         
         hflipButton = new JButton("Flip horizontally");
+        hflipButton.setOpaque(false);
         settingsPanel.add(hflipButton);
         hflipButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

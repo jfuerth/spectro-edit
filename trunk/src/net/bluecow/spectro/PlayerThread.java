@@ -56,6 +56,11 @@ public class PlayerThread extends Thread {
 
     private AudioInputStream in;
     
+    /**
+     * Most recent sample number read from input stream.
+     */
+    private long playbackPosition;
+    
     public PlayerThread(Clip clip) throws LineUnavailableException {
         this.clip = clip;
     }
@@ -70,7 +75,6 @@ public class PlayerThread extends Thread {
             outputLine = AudioSystem.getSourceDataLine(outputFormat);
             logger.finer("Output line buffer: "+outputLine.getBufferSize());
             outputLine.open();
-            outputLine.start();
 
             byte[] buf = new byte[outputLine.getBufferSize()];
 
@@ -78,26 +82,38 @@ public class PlayerThread extends Thread {
                 
                 // playback starting
                 fireStateChanged();
+                outputLine.start();
                 
                 while (playing) {
-                    int readSize = outputLine.available();
-                    int len = in.read(buf, 0, readSize);
-                    if (len != readSize) {
-                        logger.fine(String.format("Didn't read full %d bytes (got %d)\n", readSize, len));
+                    synchronized (this) {
+                        int readSize = outputLine.available();
+                        int len = in.read(buf, 0, readSize);
+                        playbackPosition += len;
+                        if (len != readSize) {
+                            logger.fine(String.format("Didn't read full %d bytes (got %d)\n", readSize, len));
+                        }
+                        if (len == -1) {
+                            // playback has completed due to EOF on audio stream
+                            setPlaybackPosition(0);
+                            playing = false;
+                        } else {
+                            outputLine.write(buf, 0, len);
+                        }
                     }
-                    if (len == -1) {
-                        // playback has completed due to EOF on audio stream
-                        setPlaybackPosition(0);
-                        playing = false;
-                    } else {
-                        outputLine.write(buf, 0, len);
-                    }
+                    fireStateChanged(); // XXX only for testing; should fire special event with sample position embedded in it
                 }
 
                 // playback ended or paused
                 fireStateChanged();
 
-                outputLine.drain();
+                if (playing) {
+                    // this is due to an EOF on the input data
+                    outputLine.drain();
+                } else {
+                    // this is due to a stopPlaying() -- we will preserve the output buffer
+                    // in case there is a startPlaying() without am intervening seek
+                    outputLine.stop();
+                }
 
                 for (;;) {
                     synchronized (this) {
@@ -168,7 +184,20 @@ public class PlayerThread extends Thread {
                 throw new RuntimeException(ex);
             }
         }
+        if (outputLine != null) {
+            outputLine.stop();
+            outputLine.flush();
+            outputLine.start();
+        }
+        playbackPosition = 0;
         in = clip.getAudio();
+    }
+    
+    /**
+     * Returns the playback position in samples from the beginning of the clip.
+     */
+    public synchronized long getPlaybackPosition() {
+        return playbackPosition;
     }
     
     private final List<ChangeListener> changeListeners = new ArrayList<ChangeListener>();

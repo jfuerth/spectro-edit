@@ -17,6 +17,7 @@
 package net.bluecow.spectro;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -31,7 +32,11 @@ import java.awt.image.DataBufferInt;
 import java.util.logging.Logger;
 
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JViewport;
 import javax.swing.Scrollable;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.UndoableEditListener;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotRedoException;
@@ -81,6 +86,8 @@ public class ClipPanel extends JPanel implements Scrollable {
     
     private final RegionMouseHandler mouseHandler = new RegionMouseHandler();
 
+    private final ClipPositionHeader clipPositionHeader = new ClipPositionHeader();
+    
     /**
      * Gets set to true while an undo is in progress. When true, undo
      * events are not fired.
@@ -100,10 +107,11 @@ public class ClipPanel extends JPanel implements Scrollable {
     };
     
     private final UndoableEditSupport undoSupport = new UndoableEditSupport(this);
-    
-    public static ClipPanel newInstance(Clip clip) {
+
+    public static ClipPanel newInstance(Clip clip, PlayerThread playerThread) {
         ClipPanel cp = new ClipPanel(clip);
         clip.addClipDataChangeListener(cp.clipDataChangeHandler);
+        playerThread.addChangeListener(cp.clipPositionHeader);
         return cp;
     }
     
@@ -496,7 +504,47 @@ public class ClipPanel extends JPanel implements Scrollable {
             return "Region move: " + oldr + " -> " + newr;
         }
     }
+
+    /**
+     * Configures the header component in the enclosing scrollpane, if the
+     * parent we were just added to is the viewport of a scrollpane.
+     */
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        Component p = getParent();
+        if (p instanceof JViewport && p.getParent() instanceof JScrollPane) {
+            JScrollPane sp = (JScrollPane) p.getParent();
+            sp.setColumnHeaderView(clipPositionHeader);
+        }
+    }
     
+    /**
+     * The header component for this clip panel. Automatically installs when this
+     * panel is in a JScrollPane.
+     */
+    private class ClipPositionHeader extends JPanel implements ChangeListener {
+
+        volatile PlayerThread pt;
+        
+        public ClipPositionHeader() {
+            setPreferredSize(new Dimension(1, 20));
+        }
+        
+        public void stateChanged(ChangeEvent e) {
+            pt = (PlayerThread) e.getSource();
+            repaint();
+        }
+        
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (pt == null) return;
+            g.setColor(Color.BLACK);
+            // TODO draw an inverted triangle instead of a rectangle
+            g.drawRect((int) (pt.getPlaybackPosition() / clip.getFrameTimeSamples()), 0, 1, getHeight());
+        }
+    }
     
     // --------------------- Scrollable interface ------------------------
 

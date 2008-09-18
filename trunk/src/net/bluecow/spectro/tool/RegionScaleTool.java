@@ -70,6 +70,7 @@ public class RegionScaleTool implements Tool {
         settingsPanel.add(new JLabel("Scale amount"));
 
         scaleSlider = new JSlider(0, 500, 100);
+        scaleSlider.setOpaque(false);
         scaleSlider.addChangeListener(new ChangeListener() {
 
             public void stateChanged(ChangeEvent e) {
