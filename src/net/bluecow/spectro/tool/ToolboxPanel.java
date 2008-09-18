@@ -19,16 +19,20 @@ package net.bluecow.spectro.tool;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
 import net.bluecow.spectro.ClipPanel;
+import net.bluecow.spectro.MemoryMonitor;
 import net.bluecow.spectro.PositionReadout;
 import net.bluecow.spectro.SpectroEditSession;
 
@@ -68,11 +72,24 @@ public class ToolboxPanel {
         this.session = session;
         this.clipPanel = session.getClipPanel();
         
-        viewSettingsPanel = new JPanel();
+        // TODO stretch all components to container width
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        viewSettingsPanel = new JPanel(new GridBagLayout());
         viewSettingsPanel.setBackground(Color.WHITE);
         viewSettingsPanel.setBorder(new TitleBorder("View Settings"));
-        viewSettingsPanel.add(clipPanel.getColorizer().getSettingsPanel());
-        viewSettingsPanel.add(new PositionReadout(clipPanel).getLabel());
+        gbc.gridx=0;
+        viewSettingsPanel.add(clipPanel.getColorizer().getSettingsPanel(), gbc);
+        viewSettingsPanel.add(new PositionReadout(clipPanel).getLabel(), gbc);
+        MemoryMonitor memoryMonitor = new MemoryMonitor();
+        memoryMonitor.start();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1f;
+        viewSettingsPanel.add(Box.createVerticalGlue(), gbc);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weighty = 0f;
+        viewSettingsPanel.add(memoryMonitor.getLabel(), gbc);
         
         toolSettingsPanel = new JPanel(new BorderLayout());
         toolSettingsPanel.setBackground(Color.WHITE);
@@ -106,7 +123,7 @@ public class ToolboxPanel {
         toolButtonPanel.add(regionScaleToolButton);
         regionScaleToolButton.addActionListener(actionHandler);
 
-        JRadioButton regionThresholdToolButton = new ToolButton(new RegionThresholdTool(), "page_white_put", toolButtonGroup); // TODO better icon
+        JRadioButton regionThresholdToolButton = new ToolButton(new RegionThresholdTool(), "threshold", toolButtonGroup); // TODO better icon
         toolButtonPanel.add(regionThresholdToolButton);
         regionThresholdToolButton.addActionListener(actionHandler);
 

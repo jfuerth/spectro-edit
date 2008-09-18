@@ -65,6 +65,7 @@ public class LogarithmicColorizer implements ValueColorizer {
         });
 
         final JCheckBox useRedCheckbox = new JCheckBox("Use red", useRed);
+        useRedCheckbox.setOpaque(false);
         useRedCheckbox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setUseRed(useRedCheckbox.isSelected());

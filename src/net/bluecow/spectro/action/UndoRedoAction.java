@@ -19,7 +19,10 @@ package net.bluecow.spectro.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
-import javax.swing.undo.UndoManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import net.bluecow.spectro.UndoManager;
 
 public class UndoRedoAction extends AbstractAction {
 
@@ -34,10 +37,18 @@ public class UndoRedoAction extends AbstractAction {
     private final boolean undo;
     private final UndoManager undoManager;
 
+    private ChangeListener undoManagerChangeHandler = new ChangeListener() {
+        public void stateChanged(ChangeEvent e) {
+            updateEnabledness();
+        }
+    };
+    
     public UndoRedoAction(UndoManager undoManager, boolean undo) {
         super(undo ? "Undo" : "Redo");
         this.undoManager = undoManager;
         this.undo = undo;
+        undoManager.addChangeListener(undoManagerChangeHandler);
+        updateEnabledness();
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -49,6 +60,18 @@ public class UndoRedoAction extends AbstractAction {
             if (undoManager.canRedo()) {
                 undoManager.redo();
             }
+        }
+    }
+
+    /**
+     * Enables or disables this action based on whether the undo manager reports
+     * that it can currently undo or redo.
+     */
+    private void updateEnabledness() {
+        if (undo) {
+            setEnabled(undoManager.canUndo());
+        } else {
+            setEnabled(undoManager.canRedo());
         }
     }
 

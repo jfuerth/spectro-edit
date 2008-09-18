@@ -107,8 +107,7 @@ public class ClipDataEdit extends AbstractUndoableEdit {
         newData = new double[oldData.length][oldData[0].length];
         capture(newData);
         if (Arrays.deepEquals(oldData, newData)) {
-            logger.info("Captured new data == old data!");
-            new Exception().printStackTrace();
+            logger.fine("Captured new data == old data!");
         }
     }
     

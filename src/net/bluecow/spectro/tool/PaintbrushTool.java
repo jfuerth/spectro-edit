@@ -59,6 +59,7 @@ public class PaintbrushTool implements Tool {
         settingsPanel.add(brushSlider = new JSlider(1, 20, 1));
         settingsPanel.add(Box.createGlue());
         
+        brushSlider.setOpaque(false);
         brushSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 brushSizeLabel.setText("Paintbrush size: " + brushSlider.getValue());

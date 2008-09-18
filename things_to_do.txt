@@ -1,13 +1,22 @@
 Not yet done:
 
--Pause should be immediate (don't drain the output line; flush it) 
--(internal) make the undo manager fire events after undo and redo so the actions can change state
--indicator of current playback position during playback and while paused 
--show nearest musical note in position readout
--memory monitoring (java.util.management)
--do better with lengthy samples (song length)
+-improve playback position indicator
+ -smoother more frequent updates
+ -better sync with playback
+ -inverted triangle shape
+ -click to reposition playback
+ -show up initially, not after first playback
+-do better with lengthy samples (as in the length of a song)
  -store all the frame data in a buffered image in the first place? --this is probably easiest
  -OR only render the visible portion into a buffered image? (perhaps by implementing a special viewport)
+ -OR keep sample data in the (wlog, WAV file) it came from and only convert it based on the clip's current
+     viewport. on playback, we'd have to sync all the changes back to the time domain and transition
+     to and from what's stored on disk. Hmm. This might be related to "Do modifications as a stack of
+     layers rather than modifying the data directly." And it would also help with arbitrary zoom, both
+     horizontal and vertical, since we'd always be starting from time domain. Hmm.
+-be able to import mp3, aac, and ogg vorbis
+-be able to zoom in an arbitrary amount, both horizontally and vertically (this will involve redoing the
+ DCT with different frame sizes and overlaps)
 -better user interface for choosing a tool and changing its properties
  -paint tool brush shape (based on greyscale bitmaps)
  -copy/paste with option of logarithmic or linear
@@ -28,8 +37,8 @@ Not yet done:
 -Do modifications as a stack of layers rather than modifying the data directly
 -import and export 16-bit greyscale images
 
-Release 0.4:
 
+Release 0.4:
 -Improved colourization so it has more user control, and can optionally use an additional
  colour (red) to double the displayed value resolution (now 16 bits instead of 8 bits).
 -Made view settings sliders exponential instead of linear. This greatly improves the
@@ -37,6 +46,12 @@ Release 0.4:
 -(internal) new JSlider subclass that makes it easy to create a slider with a configurable
  curve and known min and max values
 -fixed play/pause button so it reverts to "Play" again when playback is finished
+-the undo and redo buttons now become disabled when there is nothing to undo or redo (respectively)
+-Pause and rewind are now immediate (they don't wait for the output buffer to drain) 
+-position readout now shows nearest musical note (to the semitone)
+-a simple JVM memory monitor is now at the bottom of the window
+-made a better threshold tool icon (less ridiculous, but still not amazing)
+-simplistic playback indicator proof-of-concept (needs improvement)
 
 Release 0.3: August 28, 2008
 -Undo/redo for modifications (painting and regions)
@@ -58,6 +73,7 @@ Release 0.3: August 28, 2008
 -Continuous readout reporting mouse position: frequency (y axis) and time (x axis). 
 -huge performance improvement in clip->display updates (the brightness slider is now "like butter")
 -(internal) factored out an interface so it's easy to come up with different colorization strategies
+
 
 Release 0.2: August 9, 2008
 Fixes to save dialog:

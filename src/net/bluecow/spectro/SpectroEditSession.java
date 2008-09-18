@@ -52,12 +52,12 @@ public class SpectroEditSession {
     private final ClipPanel clipPanel;
     
     protected SpectroEditSession(Clip c) throws LineUnavailableException {
-        clipPanel = ClipPanel.newInstance(c);
-        clipPanel.addUndoableEditListener(undoManager);
-        
         playerThread = new PlayerThread(c);
         playerThread.start();
 
+        clipPanel = ClipPanel.newInstance(c, playerThread);
+        clipPanel.addUndoableEditListener(undoManager);
+        
         final JFrame f = new JFrame("Spectro-Edit " + Version.VERSION);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setLayout(new BorderLayout());

@@ -16,9 +16,16 @@
  */
 package net.bluecow.spectro;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.UndoableEditEvent;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoableEdit;
 
 public class UndoManager extends javax.swing.undo.UndoManager {
 
@@ -35,5 +42,40 @@ public class UndoManager extends javax.swing.undo.UndoManager {
         super.undoableEditHappened(e);
         logger.fine("Added edit " + edits.size() + "/" + getLimit());
     }
+    
+    @Override
+    protected void undoTo(UndoableEdit edit) throws CannotUndoException {
+        super.undoTo(edit);
+        fireStateChanged();
+    }
+    
+    @Override
+    protected void redoTo(UndoableEdit edit) throws CannotRedoException {
+        super.redoTo(edit);
+        fireStateChanged();
+    }
+    
+    @Override
+    public synchronized boolean addEdit(UndoableEdit anEdit) {
+        boolean added = super.addEdit(anEdit);
+        fireStateChanged();
+        return added;
+    }
+    
+    private final List<ChangeListener> changeListeners = new ArrayList<ChangeListener>();
 
+    public void addChangeListener(ChangeListener l) {
+        changeListeners.add(l);
+    }
+
+    public void removeChangeListener(ChangeListener l) {
+        changeListeners.remove(l);
+    }
+
+    public void fireStateChanged() {
+        ChangeEvent e = new ChangeEvent(this); // TODO fill in constructor args
+        for (int i = changeListeners.size() - 1; i >= 0; i--) {
+            changeListeners.get(i).stateChanged(e);
+        }
+    }
 }

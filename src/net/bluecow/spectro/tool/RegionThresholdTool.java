@@ -82,6 +82,7 @@ public class RegionThresholdTool implements Tool {
         settingsPanel.add(new JLabel("Cutoff Threshold"));
 
         thresholdSlider = new CurvedSlider(0.0, 10.0, 3);
+        thresholdSlider.setOpaque(false);
         thresholdSlider.addChangeListener(new ChangeListener() {
 
             public void stateChanged(ChangeEvent e) {
@@ -95,6 +96,7 @@ public class RegionThresholdTool implements Tool {
         settingsPanel.add(thresholdSlider);
         
         upper = new JCheckBox("Upper Threshold");
+        upper.setOpaque(false);
         upper.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 // just re-apply.. the method is sensitive to the state of the checkbox
