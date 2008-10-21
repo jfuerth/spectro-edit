@@ -50,17 +50,42 @@ public class PlayerThread extends Thread {
      */
     private boolean terminated = false;
 
+    /**
+     * The output line that actual playback goes to.
+     */
     private SourceDataLine outputLine;
 
+    /**
+     * The clip we're playing back samples from.
+     */
     private final Clip clip;
 
+    /**
+     * The input stream that provides audio samples from the Clip.
+     */
     private AudioInputStream in;
     
     /**
-     * Most recent sample number read from input stream.
+     * The amount that has to be subtracted from outputLine's frame position
+     * in order to determine the frame position from the beginning of the clip.
      */
-    private long playbackPosition;
+    private long outputLinePositionOffset;
+
+    /**
+     * The number of samples from the beginning of the clip that playback commenced
+     * at. This is used as an adjustment to {@link #outputLinePositionOffset} and
+     * the output line's current playback position when calculating {@link #getPlaybackPosition()}.
+     */
+    private int startSample;
     
+    /**
+     * Creates a new player thread for the given clip. Remember to call start() on
+     * this thread to make it start working.
+     * 
+     * @param clip The clip to play back audio samples from.
+     * @throws LineUnavailableException If it is not possible to open an audio device
+     * for playback.
+     */
     public PlayerThread(Clip clip) throws LineUnavailableException {
         this.clip = clip;
     }
@@ -82,25 +107,23 @@ public class PlayerThread extends Thread {
                 
                 // playback starting
                 fireStateChanged();
+                boolean reachedEOF = false;
                 outputLine.start();
                 
-                while (playing) {
+                while (playing && !reachedEOF) {
                     synchronized (this) {
-                        int readSize = outputLine.available();
+                        int readSize = (Math.min(outputLine.available(), 4096));
                         int len = in.read(buf, 0, readSize);
-                        playbackPosition += len;
                         if (len != readSize) {
                             logger.fine(String.format("Didn't read full %d bytes (got %d)\n", readSize, len));
                         }
                         if (len == -1) {
-                            // playback has completed due to EOF on audio stream
-                            setPlaybackPosition(0);
-                            playing = false;
+                            reachedEOF = true;
                         } else {
                             outputLine.write(buf, 0, len);
                         }
                     }
-                    fireStateChanged(); // XXX only for testing; should fire special event with sample position embedded in it
+                    firePlaybackPositionUpdate(getPlaybackPosition());
                 }
 
                 // playback ended or paused
@@ -108,25 +131,35 @@ public class PlayerThread extends Thread {
 
                 if (playing) {
                     // this is due to an EOF on the input data
-                    outputLine.drain();
+                    logger.finer("Draining output line...");
+                    // can't use outputLine.drain() here because we are responsible for firing playback position events
+                    while (outputLine.isRunning()) {
+                        Thread.sleep(10);
+                        firePlaybackPositionUpdate(getPlaybackPosition());
+                    }
+                    logger.finer("Finished draining output line");
                 } else {
                     // this is due to a stopPlaying() -- we will preserve the output buffer
-                    // in case there is a startPlaying() without am intervening seek
+                    // in case there is a startPlaying() without an intervening seek
+                    logger.finer("Stopping output line");
                     outputLine.stop();
                 }
 
+                if (reachedEOF) {
+                    playing = false;
+                    setPlaybackPosition(0);
+                }
+                
                 for (;;) {
                     synchronized (this) {
                         if (playing || terminated) break;
                         // if not playing and not terminated, sleep again!
                     }
                     try {
-                        Object[] args = { playing };
-                        logger.finest(String.format("Player thread sleeping for 10 seconds. playing=%b\n", args));
+                        logger.finest(String.format("Player thread sleeping for 10 seconds. playing=%b\n", playing));
                         sleep(10000);
                     } catch (InterruptedException ex) {
-                        Object[] args = {};
-                        logger.finest(String.format("Player thread interrupted in sleep\n", args));
+                        logger.finest(String.format("Player thread interrupted in sleep\n"));
                     }
                 }
             }
@@ -138,9 +171,7 @@ public class PlayerThread extends Thread {
                 outputLine = null;
             }
         }
-        Object[] args = {};
-        
-        logger.fine(String.format("Player thread terminated\n", args));
+        logger.fine("Player thread terminated");
     }
     
     public synchronized void stopPlaying() {
@@ -174,9 +205,6 @@ public class PlayerThread extends Thread {
      * depends on the audio format (specifically, the sampling rate) of the clip.
      */
     public synchronized void setPlaybackPosition(int sample) {
-        if (sample != 0) {
-            throw new UnsupportedOperationException("Currently, only rewind to beginning is supported.");
-        }
         if (in != null) {
             try {
                 in.close();
@@ -189,15 +217,27 @@ public class PlayerThread extends Thread {
             outputLine.flush();
             outputLine.start();
         }
-        playbackPosition = 0;
-        in = clip.getAudio();
+        if (outputLine != null) {
+            outputLinePositionOffset = outputLine.getLongFramePosition();
+        } else {
+            outputLinePositionOffset = 0L;
+        }
+        startSample = sample;
+        in = clip.getAudio(sample);
+        firePlaybackPositionUpdate(getPlaybackPosition());
     }
     
     /**
      * Returns the playback position in samples from the beginning of the clip.
      */
-    public synchronized long getPlaybackPosition() {
-        return playbackPosition;
+    public long getPlaybackPosition() {
+        if (outputLine == null) {
+            return 0L;
+        } else {
+            AudioFormat format = outputLine.getFormat();
+            long elapsedSamples = (outputLine.getLongFramePosition() - outputLinePositionOffset) * format.getFrameSize();
+            return elapsedSamples + startSample;
+        }
     }
     
     private final List<ChangeListener> changeListeners = new ArrayList<ChangeListener>();
@@ -225,6 +265,24 @@ public class PlayerThread extends Thread {
         ChangeEvent e = new ChangeEvent(this);
         for (int i = changeListeners.size() - 1; i >= 0; i--) {
             changeListeners.get(i).stateChanged(e);
+        }
+    }
+    
+    private final List<PlaybackPositionListener> playbackPositionListeners = new ArrayList<PlaybackPositionListener>();
+
+    public void addPlaybackPositionListener(PlaybackPositionListener l) {
+        playbackPositionListeners.add(l);
+    }
+
+    public void removePlaybackPositionListener(PlaybackPositionListener l) {
+        playbackPositionListeners.remove(l);
+    }
+
+    public void firePlaybackPositionUpdate(long samplePos) {
+        logger.finest("Firing playback position update: " + samplePos);
+        PlaybackPositionEvent e = new PlaybackPositionEvent(this, samplePos);
+        for (int i = playbackPositionListeners.size() - 1; i >= 0; i--) {
+            playbackPositionListeners.get(i).playbackPositionUpdate(e);
         }
     }
 }

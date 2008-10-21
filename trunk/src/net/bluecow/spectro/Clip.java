@@ -159,12 +159,20 @@ public class Clip {
      * @return
      */
     public AudioInputStream getAudio() {
+        return getAudio(0);
+    }
+    
+    public AudioInputStream getAudio(int sample) {
+        // TODO prefill overlap buffer with previous frame's data
+        // TODO calculate sample offset into the initial frame
+        final int initialFrame = sample / getFrameTimeSamples();
+        
         InputStream audioData = new InputStream() {
 
             /**
              * Next frame to decode for playback.
              */
-            int nextFrame = 0;
+            int nextFrame = initialFrame;
             
             /**
              * A data structure that holds all the current frames of floating point samples
@@ -340,8 +348,5 @@ public class Clip {
     public double getSamplingRate() {
         return AUDIO_FORMAT.getSampleRate();
     }
-    
-    
-    
 
 }

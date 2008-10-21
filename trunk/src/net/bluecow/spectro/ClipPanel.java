@@ -23,6 +23,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -35,8 +36,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.Scrollable;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.UndoableEditListener;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotRedoException;
@@ -111,7 +110,8 @@ public class ClipPanel extends JPanel implements Scrollable {
     public static ClipPanel newInstance(Clip clip, PlayerThread playerThread) {
         ClipPanel cp = new ClipPanel(clip);
         clip.addClipDataChangeListener(cp.clipDataChangeHandler);
-        playerThread.addChangeListener(cp.clipPositionHeader);
+        playerThread.addPlaybackPositionListener(cp.clipPositionHeader);
+        cp.clipPositionHeader.setPlayerThread(playerThread);
         return cp;
     }
     
@@ -523,27 +523,57 @@ public class ClipPanel extends JPanel implements Scrollable {
      * The header component for this clip panel. Automatically installs when this
      * panel is in a JScrollPane.
      */
-    private class ClipPositionHeader extends JPanel implements ChangeListener {
+    private class ClipPositionHeader extends JPanel implements PlaybackPositionListener {
 
-        volatile PlayerThread pt;
+        private PlayerThread playerThread;
+        volatile long playbackPosition;
         
         public ClipPositionHeader() {
             setPreferredSize(new Dimension(1, 20));
+            addMouseListener(repositionHandler);
         }
-        
-        public void stateChanged(ChangeEvent e) {
-            pt = (PlayerThread) e.getSource();
-            repaint();
+
+        public void setPlayerThread(PlayerThread playerThread) {
+            this.playerThread = playerThread;
         }
-        
+
+        public void playbackPositionUpdate(PlaybackPositionEvent e) {
+            int oldPixelPosition = playbackPixelPosition();
+            playbackPosition = e.getSamplePos();
+            int newPixelPosition = playbackPixelPosition();
+            if (newPixelPosition >= oldPixelPosition) {
+                repaint(oldPixelPosition, 0, newPixelPosition - oldPixelPosition + 1, getHeight());
+            } else {
+                repaint(newPixelPosition, 0, oldPixelPosition - newPixelPosition + 1, getHeight());
+            }
+        }
+
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (pt == null) return;
             g.setColor(Color.BLACK);
             // TODO draw an inverted triangle instead of a rectangle
-            g.drawRect((int) (pt.getPlaybackPosition() / clip.getFrameTimeSamples()), 0, 1, getHeight());
+            g.drawRect(playbackPixelPosition(), 0, 1, getHeight());
         }
+
+        /**
+         * Calculates the correct x-coordinate to position the playback indicator
+         * at, based on the clip's settings and the current playback position.
+         */
+        private int playbackPixelPosition() {
+            return (int) (playbackPosition / clip.getFrameTimeSamples());
+        }
+        
+        /**
+         * Repositions the playback thread to the frame corresponding to the mouse click coordinates.
+         */
+        private final MouseListener repositionHandler = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                playerThread.setPlaybackPosition(e.getX() * clip.getFrameTimeSamples());
+            }
+        };
+
     }
     
     // --------------------- Scrollable interface ------------------------
