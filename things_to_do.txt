@@ -1,11 +1,8 @@
 Not yet done:
 
 -improve playback position indicator
- -smoother more frequent updates
- -better sync with playback
  -inverted triangle shape
- -click to reposition playback
- -show up initially, not after first playback
+ -set up looping region (start-end)
 -do better with lengthy samples (as in the length of a song)
  -store all the frame data in a buffered image in the first place? --this is probably easiest
  -OR only render the visible portion into a buffered image? (perhaps by implementing a special viewport)
@@ -52,6 +49,8 @@ Release 0.4:
 -a simple JVM memory monitor is now at the bottom of the window
 -made a better threshold tool icon (less ridiculous, but still not amazing)
 -simplistic playback indicator proof-of-concept (needs improvement)
+-click in clip heading to reposition playback
+-ensure playback continues until end of clip (it seems to not be draining the buffer)
 
 Release 0.3: August 28, 2008
 -Undo/redo for modifications (painting and regions)
