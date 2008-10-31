@@ -26,12 +26,21 @@ import java.io.File;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.swing.AbstractAction;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import net.bluecow.spectro.Clip;
 
 public class SaveAction extends AbstractAction {
 
+    /**
+     * Controls whether or not this action should prompt when the user attempts
+     * to overwrite an existing file. The OS X file dialog does this
+     * automatically, so this flag causes the overwrite prompt to be suppressed
+     * on that platform.
+     */
+    private static final boolean PROMPT_ON_OVERWRITE = System.getProperty("mrj.version") != null;
+    
     private final Clip clip;
     private final Component dialogOwner;
 
@@ -59,17 +68,38 @@ public class SaveAction extends AbstractAction {
             } else {
                 fd = new FileDialog((Dialog) owner, "Save sample as", FileDialog.SAVE);
             }
-            fd.setVisible(true);
-            String dir = fd.getDirectory();
-            String file = fd.getFile();
-            if (file == null) return;
-            if (!file.toLowerCase().endsWith(".wav")) {
-                file += ".wav";
-            }
+            File targetFile = null;
+            boolean promptAgain;
+            do {
+                promptAgain = false;
+                fd.setVisible(true);
+                String dir = fd.getDirectory();
+                String fileName = fd.getFile();
+                if (fileName == null) return;
+                if (!fileName.toLowerCase().endsWith(".wav")) {
+                    fileName += ".wav";
+                }
+                targetFile = new File(dir, fileName);
+                if (PROMPT_ON_OVERWRITE && targetFile.exists()) {
+                    int choice = JOptionPane.showOptionDialog(
+                            owner, "The file " + targetFile + " exists.\nDo you want to replace it?",
+                            "File exists", -1, JOptionPane.WARNING_MESSAGE, null,
+                            new String[] { "Replace", "Cancel" }, "Replace");
+                    if (choice == 0) {
+                        promptAgain = false;
+                    } else if (choice == 1) {
+                        promptAgain = true;
+                    } else if (choice == -1) {
+                        return;
+                    } else {
+                        throw new RuntimeException("Unrecognized choice: " + choice);
+                    }
+                }
+            } while (promptAgain);
             AudioSystem.write(
                     clip.getAudio(),
                     AudioFileFormat.Type.WAVE,
-                    new File(dir, file));
+                    targetFile);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
