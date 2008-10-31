@@ -3,6 +3,10 @@ Not yet done:
 -improve playback position indicator
  -inverted triangle shape
  -set up looping region (start-end)
+ -ability to play just the selected (time) region
+-file menu with open and close; multiple projects open at same time
+-edit menu with image and audio copy and paste
+-keyboard actions: play-pause, play from start, tool selection
 -do better with lengthy samples (as in the length of a song)
  -store all the frame data in a buffered image in the first place? --this is probably easiest
  -OR only render the visible portion into a buffered image? (perhaps by implementing a special viewport)
@@ -27,12 +31,10 @@ Not yet done:
  compromise: hide the array in Frame, and have the access methods translate the
              y value.
 -a "find harmonics" tool that would search for overtones by shape similarity
--file menu with open and close; multiple projects open at same time
--edit menu with image and audio copy and paste
--ability to play just the selected (time) region; optional looping
 -top-level exception catcher (including uncaught swing exceptions)
 -Do modifications as a stack of layers rather than modifying the data directly
 -import and export 16-bit greyscale images
+-clipboard integration (file->new project from clipboard) -- on hold until I find an OS X program that puts audio on the system clipboard!
 
 
 Release 0.4:
@@ -51,6 +53,10 @@ Release 0.4:
 -simplistic playback indicator proof-of-concept (needs improvement)
 -click in clip heading to reposition playback
 -ensure playback continues until end of clip (it seems to not be draining the buffer)
+-support reading stereo samples (for now, just show a warning and mix the channels)
+-fix audible blip that sometimes ends up at the end of a clip (was happening when input
+ clip length wasn't an exact multiple of the DCT frame size)
+-warn before overwriting wav files (was already happening on OS X for free)
 
 Release 0.3: August 28, 2008
 -Undo/redo for modifications (painting and regions)
