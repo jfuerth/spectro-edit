@@ -93,6 +93,8 @@ public class SpectroEditSession {
     }
     
     public static void main(String[] args) throws Exception {
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Spectro-Edit");
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
         LogManager.getLogManager().readConfiguration(SpectroEditSession.class.getResourceAsStream("LogManager.properties"));
         final JFrame f = new JFrame("Dummy frame for owning dialogs");
         SwingUtilities.invokeLater(new Runnable() {
@@ -113,7 +115,7 @@ public class SpectroEditSession {
                     JOptionPane.showMessageDialog(f,
                             "Sorry, couldn't read your sample:\n" +
                             e.getMessage() +
-                            "\nBe sure your file is 16-bit mono!");
+                            "\nBe sure your file is 16-bit WAV or AIFF!");
                     System.exit(0);
                 }
             }

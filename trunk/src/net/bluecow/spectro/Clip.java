@@ -27,7 +27,6 @@ import java.util.logging.Logger;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.event.UndoableEditListener;
 import javax.swing.undo.UndoableEditSupport;
@@ -97,13 +96,21 @@ public class Clip {
     public Clip(File file) throws UnsupportedAudioFileException, IOException {
         WindowFunction windowFunc = new VorbisWindowFunction(frameSize);
         AudioFormat desiredFormat = AUDIO_FORMAT;
-        BufferedInputStream in = new BufferedInputStream(AudioSystem.getAudioInputStream(desiredFormat, AudioSystem.getAudioInputStream(file)));
-        
+        BufferedInputStream in = new BufferedInputStream(AudioFileUtils.readAsMono(desiredFormat, file));
         byte[] buf = new byte[frameSize * 2]; // 16-bit mono samples
         int n;
         in.mark(buf.length * 2);
-        while ( (n = in.read(buf)) != -1) {
-            logger.fine("Read "+n+" bytes");
+        while ( (n = readFully(in, buf)) != -1) {
+            logger.finest("Read "+n+" bytes");
+            if (n != buf.length) {
+                // this should only happen at the end of the input file (last frame)
+                logger.warning("Only read "+n+" of "+buf.length+" bytes at frame " + frames.size());
+                
+                // pad with silence or there will be audible junk at end of clip
+                for (int i = n; i < buf.length; i++) {
+                    buf[i] = 0;
+                }
+            }
             double[] samples = new double[frameSize];
             for (int i = 0; i < frameSize; i++) {
                 int hi = buf[2*i];// & 0xff; // need sign extension
@@ -114,13 +121,45 @@ public class Clip {
             
             frames.add(new Frame(samples, windowFunc));
             in.reset();
-            in.skip((frameSize * 2) / overlap);
+            long bytesToSkip = (frameSize * 2) / overlap;
+            long bytesSkipped;
+            if ( (bytesSkipped = in.skip(bytesToSkip)) != bytesToSkip) {
+                logger.info("Skipped " + bytesSkipped + " bytes, but wanted " + bytesToSkip + " at frame " + frames.size());
+            }
             in.mark(buf.length * 2);
         }
         
-        logger.info(String.format("Read %d frames from %s (%d bytes)\n", frames.size(), file.getAbsolutePath(), frames.size() * buf.length));
+        logger.info(String.format("Read %d frames from %s (%d bytes). frameSize=%d overlap=%d\n", frames.size(), file.getAbsolutePath(), frames.size() * buf.length, frameSize, overlap));
     }
     
+    /**
+     * Fills the given buffer by reading the given input stream repeatedly
+     * until the buffer is full. The only conditions that will prevent buf
+     * from being filled by the time this method returns are if the input
+     * stream indicates an EOF condition or an IO error occurs.
+     * 
+     * @param in The input stream to read
+     * @param buf The buffer to fill with bytes from the input stream
+     * @return The number of bytes actually read into buf
+     * @throws IOException If an IO error occurs
+     */
+    private int readFully(InputStream in, byte[] buf) throws IOException {
+        int offset = 0;
+        int length = buf.length;
+        int bytesRead = 0;
+        while ( (offset < buf.length) && ((bytesRead = in.read(buf, offset, length)) != -1) ) {
+            logger.finest("read " + bytesRead + " bytes at offset " + offset);
+            length -= bytesRead;
+            offset += bytesRead;
+        }
+        if (offset > 0) {
+            logger.fine("Returning " + offset + " bytes read into buf");
+            return offset;
+        } else {
+            logger.fine("Returning EOF");
+            return -1;
+        }
+    }
     /**
      * Returns the number of time samples per frame.
      */
