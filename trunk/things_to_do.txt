@@ -37,7 +37,7 @@ Not yet done:
 -clipboard integration (file->new project from clipboard) -- on hold until I find an OS X program that puts audio on the system clipboard!
 
 
-Release 0.4:
+Release 0.4: October 30, 2008
 -Improved colourization so it has more user control, and can optionally use an additional
  colour (red) to double the displayed value resolution (now 16 bits instead of 8 bits).
 -Made view settings sliders exponential instead of linear. This greatly improves the
