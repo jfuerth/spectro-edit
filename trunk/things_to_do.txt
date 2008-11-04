@@ -1,6 +1,7 @@
 Not yet done:
 
 -improve playback position indicator
+ -must work properly when view is scrolled horizontally
  -inverted triangle shape
  -set up looping region (start-end)
  -ability to play just the selected (time) region
@@ -37,7 +38,7 @@ Not yet done:
 -clipboard integration (file->new project from clipboard) -- on hold until I find an OS X program that puts audio on the system clipboard!
 
 
-Release 0.4: October 30, 2008
+Release 0.4: November 4, 2008
 -Improved colourization so it has more user control, and can optionally use an additional
  colour (red) to double the displayed value resolution (now 16 bits instead of 8 bits).
 -Made view settings sliders exponential instead of linear. This greatly improves the
@@ -57,6 +58,7 @@ Release 0.4: October 30, 2008
 -fix audible blip that sometimes ends up at the end of a clip (was happening when input
  clip length wasn't an exact multiple of the DCT frame size)
 -warn before overwriting wav files (was already happening on OS X for free)
+-remember app frame size and position 
 
 Release 0.3: August 28, 2008
 -Undo/redo for modifications (painting and regions)
