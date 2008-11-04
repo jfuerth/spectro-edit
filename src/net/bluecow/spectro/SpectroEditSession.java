@@ -20,9 +20,15 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.LogManager;
+import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -39,7 +45,22 @@ import net.bluecow.spectro.action.SaveAction;
 import net.bluecow.spectro.action.UndoRedoAction;
 import net.bluecow.spectro.tool.ToolboxPanel;
 
+/**
+ * The central point of coordination for all the parts that work together to
+ * provide a GUI editing environment for an audio file.
+ * <p>
+ * This class also provides the main() method that is used to launch the application.
+ *
+ * @author fuerth
+ */
 public class SpectroEditSession {
+
+    private static final Logger logger = Logger.getLogger(SpectroEditSession.class.getName());
+    
+    /**
+     * The preferences object we store session preferences in.
+     */
+    private static final Preferences prefs = Preferences.userNodeForPackage(SpectroEditSession.class);
 
     /**
      * The undo manager that keeps track of changes in this session, including
@@ -76,15 +97,48 @@ public class SpectroEditSession {
         toolbar.add(new RewindAction(playerThread));
         f.add(toolbar, BorderLayout.NORTH);
         
-        f.pack();
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        f.setSize(
-                Math.min(screenSize.width - 50, f.getWidth()),
-                Math.min(screenSize.height - 50, f.getHeight()));
-        f.setLocationRelativeTo(null);
+        if (prefs.get("frameBounds", null) != null) {
+            String[] frameBounds = prefs.get("frameBounds", null).split(",");
+            if (frameBounds.length == 4) {
+                f.setBounds(
+                        Integer.parseInt(frameBounds[0]),
+                        Integer.parseInt(frameBounds[1]),
+                        Integer.parseInt(frameBounds[2]),
+                        Integer.parseInt(frameBounds[3]));
+            }
+        } else {
+            f.pack();
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            f.setSize(
+                    Math.min(screenSize.width - 50, f.getWidth()),
+                    Math.min(screenSize.height - 50, f.getHeight()));
+            f.setLocationRelativeTo(null);
+        }
+        f.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                try {
+                    prefs.put("frameBounds", String.format("%d,%d,%d,%d", f.getX(), f.getY(), f.getWidth(), f.getHeight()));
+                    prefs.flush();
+                } catch (BackingStoreException ex) {
+                    logger.log(Level.WARNING, "Failed to flush preferences", ex);
+                }
+            }
+        });
         f.setVisible(true);
     }
     
+    /**
+     * Creates a new session with a GUI for editing a Clip. The Clip's contents
+     * will be initialized to correspond with the given file, which should be
+     * in a PCM-encoded WAV or AIFF file.
+     * 
+     * @param wavFile The file to load
+     * @return The new session that was created
+     * @throws UnsupportedAudioFileException
+     * @throws IOException
+     * @throws LineUnavailableException
+     */
     public static SpectroEditSession createSession(File wavFile) throws UnsupportedAudioFileException, IOException, LineUnavailableException {
         Clip c = new Clip(wavFile);
         SpectroEditSession session = new SpectroEditSession(c);
@@ -92,6 +146,13 @@ public class SpectroEditSession {
         return session;
     }
     
+    /**
+     * Launches the Spectro-Edit application by prompting the user for a file, then
+     * creating a new session for editing that file.
+     * 
+     * @param args Currently ignored
+     * @throws Exception If startup fails catastrophically
+     */
     public static void main(String[] args) throws Exception {
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Spectro-Edit");
         System.setProperty("apple.laf.useScreenMenuBar", "true");
@@ -100,7 +161,7 @@ public class SpectroEditSession {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    FileDialog fd = new FileDialog(f, "Choose a 16-bit mono WAV file");
+                    FileDialog fd = new FileDialog(f, "Choose a 16-bit WAV or AIFF file");
                     fd.setVisible(true);
                     String dir = fd.getDirectory();
                     String file = fd.getFile();
