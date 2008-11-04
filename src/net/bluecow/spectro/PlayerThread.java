@@ -105,9 +105,9 @@ public class PlayerThread extends Thread {
 
             while (!terminated) {
                 
-                // playback starting
-                fireStateChanged();
                 boolean reachedEOF = false;
+                logger.info("playback starting: reachedEOF="+reachedEOF+" playing="+playing+" terminated="+terminated);
+                fireStateChanged();
                 outputLine.start();
                 
                 while (playing && !reachedEOF) {
@@ -126,16 +126,28 @@ public class PlayerThread extends Thread {
                     firePlaybackPositionUpdate(getPlaybackPosition());
                 }
 
-                // playback ended or paused
-                fireStateChanged();
-
                 if (playing) {
                     // this is due to an EOF on the input data
-                    logger.finer("Draining output line...");
                     // can't use outputLine.drain() here because we are responsible for firing playback position events
+                    logger.finer("Draining output line...");
+                    
+                    long lastPlaybackPos = 0L;
+                    
                     while (outputLine.isRunning()) {
-                        Thread.sleep(10);
+                        try {
+                            Thread.sleep(30);
+                        } catch (InterruptedException ex) {
+                            logger.finer("Interrupted while draining output line");
+                        }
+                        
                         firePlaybackPositionUpdate(getPlaybackPosition());
+                        
+                        // workaround: if the line has been started and stopped during playback, isRunning()
+                        // gets stuck as true. Here we check if the playback position has stopped incrementing
+                        // to detect the end of the buffer flush.
+                        if (lastPlaybackPos == getPlaybackPosition()) break;
+                        
+                        lastPlaybackPos = getPlaybackPosition();
                     }
                     logger.finer("Finished draining output line");
                 } else {
@@ -150,6 +162,9 @@ public class PlayerThread extends Thread {
                     setPlaybackPosition(0);
                 }
                 
+                logger.info("playback ended or paused: reachedEOF="+reachedEOF+" playing="+playing+" terminated="+terminated);
+                fireStateChanged();
+
                 for (;;) {
                     synchronized (this) {
                         if (playing || terminated) break;
@@ -159,7 +174,7 @@ public class PlayerThread extends Thread {
                         logger.finest(String.format("Player thread sleeping for 10 seconds. playing=%b\n", playing));
                         sleep(10000);
                     } catch (InterruptedException ex) {
-                        logger.finest(String.format("Player thread interrupted in sleep\n"));
+                        logger.finer(String.format("Player thread interrupted in sleep\n"));
                     }
                 }
             }
@@ -262,6 +277,7 @@ public class PlayerThread extends Thread {
     }
     
     private void fireStateChanged() {
+        logger.fine("Firing state change to " + changeListeners.size() + " listeners... playing=" + playing);
         ChangeEvent e = new ChangeEvent(this);
         for (int i = changeListeners.size() - 1; i >= 0; i--) {
             changeListeners.get(i).stateChanged(e);
