@@ -17,6 +17,9 @@
 package net.bluecow.spectro;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.emory.mathcs.jtransforms.dct.DoubleDCT_1D;
@@ -34,16 +37,17 @@ public class Frame {
      */
     private double[] data;
 
-    private static DoubleDCT_1D dct;
-
+    /**
+     * Maps frame size to the DCT instance that handles that size.
+     */
+    private static Map<Integer, DoubleDCT_1D> dctInstances = new HashMap<Integer, DoubleDCT_1D>();
+    
     private final WindowFunction windowFunc;
     
     public Frame(double[] timeData, WindowFunction windowFunc) {
         this.windowFunc = windowFunc;
-        if (dct == null) {
-            // XXX this only works if all frames are same size as the first one
-            dct = new DoubleDCT_1D(timeData.length);
-        }
+        int frameSize = timeData.length;
+        DoubleDCT_1D dct = getDctInstance(frameSize);
 
         // in place window
         windowFunc.applyWindow(timeData);
@@ -54,14 +58,25 @@ public class Frame {
         double min = Double.POSITIVE_INFINITY;
         double max = Double.NEGATIVE_INFINITY;
         
-        data = new double[timeData.length];
+        data = new double[frameSize];
         for (int i = 0; i < data.length; i++) {
             data[i] = timeData[i];
             min = Math.min(data[i], min);
             max = Math.max(data[i], max);
         }
         
-        logger.finer(String.format("Computed frame. min=%4.6f max=%4.6f", min, max));
+        if (logger.isLoggable(Level.FINER)) {
+            logger.finer(String.format("Computed frame. min=%4.6f max=%4.6f", min, max));
+        }
+    }
+
+    private static DoubleDCT_1D getDctInstance(int frameSize) {
+        DoubleDCT_1D dct = dctInstances.get(frameSize);
+        if (dct == null) {
+            dct = new DoubleDCT_1D(frameSize);
+            dctInstances.put(frameSize, dct);
+        }
+        return dct;
     }
     
     /**
@@ -108,6 +123,7 @@ public class Frame {
     public double[] asTimeData() {
         double[] timeData = new double[data.length];
         System.arraycopy(data, 0, timeData, 0, data.length);
+        DoubleDCT_1D dct = getDctInstance(data.length);
         dct.inverse(timeData, true);
         windowFunc.applyWindow(timeData);
         return timeData;

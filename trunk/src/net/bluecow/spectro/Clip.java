@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.sound.sampled.AudioFormat;
@@ -48,20 +49,23 @@ public class Clip {
      */
     private static final AudioFormat AUDIO_FORMAT = new AudioFormat(44100, 16, 1, true, true);
 
+    private static final int DEFAULT_FRAME_SIZE = 1024;
+    private static final int DEFAULT_OVERLAP = 2;
+    
     private final List<Frame> frames = new ArrayList<Frame>();
     
     /**
      * Number of samples per frame. Currently must be a power of 2 (this is a requirement
      * of many DFT routines).
      */
-    private int frameSize = 1024;
+    private final int frameSize;
     
     /**
      * The amount of overlap: this is the number of frames that will carry information
      * about the same sample. A value of 1 means no overlap; 2 means frames will overlap
      * to cover every sample twice, and so on.  More overlap means better time resolution.
      */
-    private int overlap = 2;
+    private final int overlap;
     
     /**
      * The amount that the time samples are divided by before sending to the transformation,
@@ -75,6 +79,8 @@ public class Clip {
     private ClipDataEdit currentEdit;
 
     private final UndoableEditSupport undoEventSupport = new UndoableEditSupport();
+
+    private final String name;
     
     /**
      * Creates a new Clip based on the acoustical information in the given audio
@@ -93,10 +99,31 @@ public class Clip {
      *             If the file can't be read for more basic reasons, such
      *             as nonexistence.
      */
-    public Clip(File file) throws UnsupportedAudioFileException, IOException {
-        WindowFunction windowFunc = new VorbisWindowFunction(frameSize);
+    public static Clip newInstance(File file) throws UnsupportedAudioFileException, IOException {
         AudioFormat desiredFormat = AUDIO_FORMAT;
         BufferedInputStream in = new BufferedInputStream(AudioFileUtils.readAsMono(desiredFormat, file));
+        return new Clip(file.getAbsolutePath(), in, DEFAULT_FRAME_SIZE, DEFAULT_OVERLAP);
+    }
+    
+    /**
+     * Creates a new clip from the audio data in the given input stream.
+     * 
+     * @param name The name of this clip. Could be the file name it was read from, or
+     * something supplied by the user.
+     * @param in The audio data to read. Must have the following characteristics:
+     * <ul>
+     *  <li>Contains bytes in the format that an AudioInputStream in the format
+     *      specified by {@link #AUDIO_FORMAT}
+     *  <li>Supports mark() and reset(). (This can be accomplished by wrapping
+     *      your stream in a BufferedInputStream)
+     * </ul>
+     * @throws IOException If reading the input stream fails for any reason. 
+     */
+    private Clip(String name, InputStream in, int frameSize, int overlap) throws IOException {
+        this.name = name;
+        this.frameSize = frameSize;
+        this.overlap = overlap;
+        WindowFunction windowFunc = new VorbisWindowFunction(frameSize);
         byte[] buf = new byte[frameSize * 2]; // 16-bit mono samples
         int n;
         in.mark(buf.length * 2);
@@ -129,7 +156,7 @@ public class Clip {
             in.mark(buf.length * 2);
         }
         
-        logger.info(String.format("Read %d frames from %s (%d bytes). frameSize=%d overlap=%d\n", frames.size(), file.getAbsolutePath(), frames.size() * buf.length, frameSize, overlap));
+        logger.info(String.format("Read %d frames from %s (%d bytes). frameSize=%d overlap=%d\n", frames.size(), name, frames.size() * buf.length, frameSize, overlap));
     }
     
     /**
@@ -192,7 +219,17 @@ public class Clip {
     public Frame getFrame(int i) {
         return frames.get(i);
     }
-    
+
+    /**
+     * Returns the number of frames that overlap to produce any given time sample.
+     * An overlap of at least 2 is required in order to produce a click-free result
+     * after modifying the specral information. Larger values give better time
+     * resolution at the cost of a linear increase in memory and CPU consumption.
+     */
+    public int getOverlap() {
+        return overlap;
+    }
+
     /**
      * Returns the audio data in this clip as an AudioInputStream.
      * @return
@@ -202,6 +239,24 @@ public class Clip {
     }
     
     public AudioInputStream getAudio(int sample) {
+        return getAudio(sample, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Returns the time-domain audio data for some or all of this clip.
+     * 
+     * @param sample
+     *            The starting sample position for the returned audio stream.
+     * @param length
+     *            The maximum number of samples to include in the audio stream.
+     *            If this length argument specifies a sample position past the
+     *            end of the clip, it will be ignored (extra padding will not be
+     *            added).
+     * @return an audio stream in the AUDIO_FORMAT format that begins with the
+     *         sound at the given start sample and ends either at the natural
+     *         end of this clip, or after returning <code>length</code> samples.
+     */
+    public AudioInputStream getAudio(int sample, int length) {
         // TODO prefill overlap buffer with previous frame's data
         // TODO calculate sample offset into the initial frame
         final int initialFrame = sample / getFrameTimeSamples();
@@ -219,8 +274,15 @@ public class Clip {
              */
             OverlapBuffer overlapBuffer = new OverlapBuffer(frameSize, overlap);
             
+            /**
+             * The current sample data. Only the lower 16 bits are significant.
+             */
             int currentSample;
             
+            /**
+             * Flag to indicate if the current byte being read from the input stream
+             * is the high byte or the low byte of a single 16-bit sample.
+             */
             boolean currentByteHigh = true;
             
             int emptyFrameCount = 0;
@@ -256,8 +318,8 @@ public class Clip {
             }
             
         };
-        int length = getFrameCount() * getFrameTimeSamples() * (AUDIO_FORMAT.getSampleSizeInBits() / 8) / overlap;
-        return new AudioInputStream(audioData, AUDIO_FORMAT, length);
+        int clipLength = getFrameCount() * getFrameTimeSamples() * (AUDIO_FORMAT.getSampleSizeInBits() / 8) / overlap;
+        return new AudioInputStream(audioData, AUDIO_FORMAT, Math.min(length, clipLength));
     }
 
     /**
@@ -386,6 +448,50 @@ public class Clip {
 
     public double getSamplingRate() {
         return AUDIO_FORMAT.getSampleRate();
+    }
+
+    /**
+     * Creates a new Clip instance based on the given range of frames in the
+     * current clip.
+     * <p>
+     * Currently, the audio data of the sub clip is independent of the clip it
+     * was obtained from. This is not really a desirable situation (it would be
+     * better if the underlying data were shared), so don't count on this
+     * behaviour!
+     * 
+     * @param startFrame
+     *            The first frame of this clip that should appear in the subclip
+     * @param nFrames
+     *            The number of frames of this clip that should appear in the subclip.
+     * @param newFrameSize
+     *            The frame size of the subclip. This determines the frequency
+     *            resolution--larger frames give more vertical (frequency)
+     *            resolution. Must be a power of two.
+     * @param newOverlap
+     *            The degree of overlap for frames in the subclip. Larger values
+     *            give more horizontal (time) resolution.
+     * @return
+     */
+    public Clip subClip(int startFrame, int nFrames, int newFrameSize, int newOverlap) {
+        InputStream in = null;
+        try {
+            // decode existing
+            in = new BufferedInputStream(getAudio(startFrame * frameSize, nFrames * frameSize));
+
+            // create new clip with new settings
+            Clip subClip = new Clip("Part of " + name, in, newFrameSize, newOverlap);
+            return subClip;
+        } catch (IOException ex) {
+            AssertionError err = new AssertionError("Unexpected IO Exception during clip resampling");
+            err.initCause(ex);
+            throw err;
+        } finally {
+            try {
+                if (in != null) in.close();
+            } catch (IOException ex) {
+                logger.log(Level.WARNING, "Failed to close input stream after creating subclip", ex);
+            }
+        }
     }
 
 }

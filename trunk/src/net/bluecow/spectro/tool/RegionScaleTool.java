@@ -113,13 +113,13 @@ public class RegionScaleTool implements Tool {
 
     @Override
     public String toString() {
-        return "Region";
+        return "Scale Region";
     }
     
     /**
      * Scales the actual clip data in the given region by the amount given. 1.0 means
-     * no change; between 0.0 and 1.0 means to reduce volume, and &gt;1.0 means
-     * to increase volume.
+     * no change; between 0.0 and 1.0 means to reduce intensity, and &gt;1.0 means
+     * to increase intensity.
      */
     public void scaleRegion(double amount) {
         Rectangle region = clipPanel.getRegion();
