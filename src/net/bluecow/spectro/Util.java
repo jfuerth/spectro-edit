@@ -16,6 +16,14 @@
  */
 package net.bluecow.spectro;
 
+import java.awt.Component;
+import java.awt.Dialog;
+import java.awt.Frame;
+import java.awt.Window;
+
+import javax.swing.JDialog;
+import javax.swing.SwingUtilities;
+
 public class Util {
 
     /**
@@ -31,4 +39,31 @@ public class Util {
         }
         return complex;
     }
+    
+    /**
+     * Tries very hard to create a JDialog which is owned by the parent
+     * Window of the given component.  However, if the component does not
+     * have a Window ancestor, or the component has a Window ancestor that
+     * is not a Frame or Dialog, this method instead creates an unparented
+     * JDialog which is always-on-top.
+     * 
+     * @param owningComponent The component that should own this dialog.
+     * @param title The title for the dialog.
+     * @return A JDialog that is either owned by the Frame or Dialog ancestor of
+     * owningComponent, or not owned but set to be alwaysOnTop.
+     */
+    public static JDialog makeOwnedDialog(Component owningComponent, String title) {
+        Window owner = SwingUtilities.getWindowAncestor(owningComponent);
+        if (owner instanceof Frame) {
+            return new JDialog((Frame) owner, title);
+        } else if (owner instanceof Dialog) {
+            return new JDialog((Dialog) owner, title);
+        } else {
+            JDialog d = new JDialog();
+            d.setTitle(title);
+            d.setAlwaysOnTop(true);
+            return d;
+        }
+    }
+
 }

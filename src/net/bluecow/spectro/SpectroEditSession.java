@@ -140,7 +140,7 @@ public class SpectroEditSession {
      * @throws LineUnavailableException
      */
     public static SpectroEditSession createSession(File wavFile) throws UnsupportedAudioFileException, IOException, LineUnavailableException {
-        Clip c = new Clip(wavFile);
+        Clip c = Clip.newInstance(wavFile);
         SpectroEditSession session = new SpectroEditSession(c);
         c.addUndoableEditListener(session.undoManager);
         return session;

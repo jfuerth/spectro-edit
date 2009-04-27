@@ -107,12 +107,25 @@ public class ClipPanel extends JPanel implements Scrollable {
     
     private final UndoableEditSupport undoSupport = new UndoableEditSupport(this);
 
+    /**
+     * Creates a new ClipPanel component for the given clip. Also attaches
+     * to the given player thread, and will show a visual indication of playback
+     * position for that thread.
+     * 
+     * @param clip
+     * @param playerThread
+     * @return
+     */
     public static ClipPanel newInstance(Clip clip, PlayerThread playerThread) {
         ClipPanel cp = new ClipPanel(clip);
         clip.addClipDataChangeListener(cp.clipDataChangeHandler);
         playerThread.addPlaybackPositionListener(cp.clipPositionHeader);
         cp.clipPositionHeader.setPlayerThread(playerThread);
         return cp;
+    }
+
+    public static ClipPanel newInstance(Clip clip) {
+        return new ClipPanel(clip);
     }
     
     private ClipPanel(Clip clip) {

@@ -131,6 +131,10 @@ public class ToolboxPanel {
         toolButtonPanel.add(flipToolButton);
         flipToolButton.addActionListener(actionHandler);
 
+        JRadioButton magnifyToolButton = new ToolButton(new MagnifyTool(), "magnifier", toolButtonGroup); // TODO better icon
+        toolButtonPanel.add(magnifyToolButton);
+        magnifyToolButton.addActionListener(actionHandler);
+
         panel = new JPanel(new GridLayout(3, 1));
         panel.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
         panel.setBackground(Color.WHITE);
